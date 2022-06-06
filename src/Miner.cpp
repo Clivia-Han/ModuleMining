@@ -61,7 +61,7 @@ void Miner::loadGraph(string baseName, int graphType, int support, CLMap& freqEd
             cout<<*(p->getGraph())<<endl;
             freqEdges.addPattern(p);
             frequentPatternVec.push_back(p);
-            frequentPatternsDomain.insert(std::pair<int, map<int, set<int>>>(frequentPatternVec.size(), p->getDomainValues()));
+            frequentPatternsDomain.insert(std::pair<int, map<int, set<int>>>(frequentPatternVec.size()-1, p->getDomainValues()));
         }
 		else
 			delete (Pattern*)((*iter).second);

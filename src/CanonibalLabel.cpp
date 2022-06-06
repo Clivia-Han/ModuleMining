@@ -166,10 +166,9 @@ bool CanonicalLabel::sortPartitions(vector<CL_Partition* >& parts)
     // Sort by node_label in descending order
 	sort(parts.begin(), parts.begin()+parts.size(), descending);//std::greater<CL_Partition*>());
 	int i=0;
-	for(vector<CL_Partition*>::iterator enum1 = parts.begin();enum1!=parts.end();enum1++)
+	for(auto part : parts)
 	{
-		CL_Partition* part = *enum1;
-		int oldID = part->getID();
+        int oldID = part->getID();
 		if(oldID!=i)
 			b = false;
 		part->setID(i);
@@ -228,11 +227,10 @@ string CanonicalLabel::generate(GraphX* graph)
     // Sort by node_label in descending order, reorder the partID
 	sortPartitions(partsV);
 	//generate Neighbors list, then sort nodes inside each partition
-	for(std::vector<CL_Partition*>::iterator enum1 = partsV.begin(); enum1 != partsV.end(); ++enum1)
+	for(auto part : partsV)
 	{
-		CL_Partition* part = *enum1;
-		//for each node generate NL
-		for(std::vector<NodeWithInfo*>::const_iterator enum2 = part->getNodesEnum(); enum2 != part->getNodesEnd(); ++enum2)
+			//for each node generate NL
+		for(auto enum2 = part->getNodesEnum(); enum2 != part->getNodesEnd(); ++enum2)
 		{
 			NodeWithInfo* nInfo = *enum2;
             // otherNodesPartID + {otherNodeLabel + edgeLabel}
@@ -250,7 +248,7 @@ string CanonicalLabel::generate(GraphX* graph)
 		//generate new partitions
 		bool b = false;
 		unsigned int i = 0;
-		for(vector<CL_Partition*>::iterator enum1 = partsV.begin(); enum1 != partsV.end(); ++enum1)
+		for(auto enum1 = partsV.begin(); enum1 != partsV.end(); ++enum1)
 		{
 			CL_Partition* part = *enum1;
 			map<string, CL_Partition*>* newParts = part->getNewParts();
@@ -263,9 +261,9 @@ string CanonicalLabel::generate(GraphX* graph)
 				MapToVec(*newParts, newPartsArr);
 				newParts->clear();
 				delete newParts;
-				for(vector<CL_Partition* >::iterator j = newPartsArr.begin(); j!=newPartsArr.end(); ++j)
+				for(auto & j : newPartsArr)
 				{
-					(*j)->setSortingValues();
+					j->setSortingValues();
 				}
 
 				sort(newPartsArr.begin(), newPartsArr.begin()+newPartsArr.size(), ascending);
@@ -275,7 +273,8 @@ string CanonicalLabel::generate(GraphX* graph)
 				partsV.erase(partsV.begin()+i);
 
 				int j_count = 0;
-				for(vector<CL_Partition* >::iterator j = newPartsArr.begin(); j!=newPartsArr.end(); ++j,j_count++)
+                //Repartition using partition information in partsV and newPartsArr
+				for(auto j = newPartsArr.begin(); j!=newPartsArr.end(); ++j,j_count++)
 				{
 					(*j)->setID(i+j_count);
 					(*j)->setSortingValues();
@@ -289,14 +288,12 @@ string CanonicalLabel::generate(GraphX* graph)
 				newPartsArr.clear();
 
 				//generate Neighbors list, then sort nodes inside each partition
-				for(vector<CL_Partition*>::iterator enum11 = partsV.begin(); enum11 != partsV.end(); ++enum11)
+				for(auto part2 : partsV)
 				{
-					CL_Partition* part2 = *enum11;
-
-					int toto = part2->getID();
+                    int toto = part2->getID();
 
 					//for each node generate NL
-					for(vector<NodeWithInfo*>::const_iterator enum2 = part2->getNodesEnum();enum2!=part2->getNodesEnd();++enum2)
+					for(auto enum2 = part2->getNodesEnum();enum2!=part2->getNodesEnd();++enum2)
 					{
 						NodeWithInfo* nInfo = *enum2;
 						nInfo->nl = generateNeighborsList(nInfo, allNodes);
@@ -317,15 +314,15 @@ string CanonicalLabel::generate(GraphX* graph)
 
 	//reset counters and generate signature prefix
 	string prefix;
-	for(vector<CL_Partition* >::iterator i = partsV.begin();i!=partsV.end();++i)
+	for(auto & i : partsV)
 	{
 		if(enablePrint)
 		{
-			cout<<"Part:"+intToString((*i)->getID())<<endl;
-			cout<<(*i)->getCombinations()->size()<<endl;
+			cout<<"Part:"+intToString(i->getID())<<endl;
+			cout<<i->getCombinations()->size()<<endl;
 		}
-		(*i)->counter = 0;
-		prefix.append((*i)->getPrefix());
+		i->counter = 0;
+		prefix.append(i->getPrefix());
 		prefix.append(",");
 	}
 
@@ -392,10 +389,9 @@ string CanonicalLabel::generate(GraphX* graph)
 	//get the max signature line
 	char* maxSigLine = 0;
 	CL_Partition* firstPart = partsV.at(0);
-	for(vector<vector<NodeWithInfo*>*>::iterator iter = firstPart->getCombinations()->begin();iter!=firstPart->getCombinations()->end();iter++)
+	for(auto singleComb : *firstPart->getCombinations())
 	{
-		vector<NodeWithInfo*>* singleComb = (*iter);
-		char* temp1 = generateCanLabel(singleComb, graph, ellt, true);
+			char* temp1 = generateCanLabel(singleComb, graph, ellt, true);
 
 		if(maxSigLine==0 || strcmp(temp1, maxSigLine)>0)
 		{
@@ -409,7 +405,7 @@ string CanonicalLabel::generate(GraphX* graph)
 	}
 
 	//delete any permutation from the first partition that is less than the max
-	for(vector<vector<NodeWithInfo*>*>::iterator iter = firstPart->getCombinations()->begin();iter!=firstPart->getCombinations()->end();)
+	for(auto iter = firstPart->getCombinations()->begin();iter!=firstPart->getCombinations()->end();)
 	{
 		vector<NodeWithInfo*>* singleComb = (*iter);
 
@@ -445,7 +441,7 @@ string CanonicalLabel::generate(GraphX* graph)
 	char* maxCL = new char[1];
 	maxCL[0] = 0;
 
-	vector<NodeWithInfo* >* bestCombination = 0;
+	vector<NodeWithInfo* >* bestCombination = nullptr;
 	bool b = true;
 	int count = 0;
 	while(true)
@@ -457,9 +453,9 @@ string CanonicalLabel::generate(GraphX* graph)
 		}
 		//add a combination
 		vector<NodeWithInfo* >* singleCombination = new vector<NodeWithInfo* >();
-		for(vector<CL_Partition* >::iterator i = partsV.begin();i!=partsV.end();++i)
+		for(auto & i : partsV)
 		{
-			vector<NodeWithInfo*>* temp = *(((*i)->getCombinations())->begin()+(*i)->counter);
+			vector<NodeWithInfo*>* temp = *((i->getCombinations())->begin()+i->counter);
 			singleCombination->insert(singleCombination->end(), temp->begin(), temp->end());
 		}
 
@@ -485,7 +481,7 @@ string CanonicalLabel::generate(GraphX* graph)
 
 		//increase counters
 		int i_counter = partsV.size()-1;
-		for(vector<CL_Partition* >::reverse_iterator i = partsV.rbegin();i!=partsV.rend();++i,--i_counter)
+		for(auto i = partsV.rbegin();i!=partsV.rend();++i,--i_counter)
 		{
 			if((*i)->counter<(*i)->getCombinations()->size()-1)
 			{
@@ -514,7 +510,7 @@ string CanonicalLabel::generate(GraphX* graph)
 		//added to delete NodeWithInfo for this partition
 		if((*i)->getCombinations()->size()>0)
 		{
-			for(vector<NodeWithInfo*>::iterator iter1 = (*(*i)->getCombinations()->begin())->begin();iter1!=(*(*i)->getCombinations()->begin())->end();++iter1)
+			for(auto iter1 = (*(*i)->getCombinations()->begin())->begin();iter1!=(*(*i)->getCombinations()->begin())->end();++iter1)
 			{
 				delete (*iter1);
 			}
@@ -556,7 +552,7 @@ string CanonicalLabel::generateNeighborsList(NodeWithInfo* nInfo, map<int , Node
 		pidl->partID = oNodePartID;
 
 		//put the details in order
-		vector<PartID_label*>::iterator i = orderedNL.begin();
+		auto i = orderedNL.begin();
 		for(;i!=orderedNL.end();i++)
 		{
 			PartID_label* currentpidl = *i;
@@ -568,10 +564,10 @@ string CanonicalLabel::generateNeighborsList(NodeWithInfo* nInfo, map<int , Node
 		orderedNL.insert(i, pidl);
 	}
 
-	for(vector<PartID_label*>::iterator i=orderedNL.begin();i!=orderedNL.end();i++)
+	for(auto & i : orderedNL)
 	{
-		sb.append((*i)->toString());
-		delete (*i);
+		sb.append(i->toString());
+		delete i;
 	}
 
 	return sb;
@@ -583,9 +579,9 @@ char* CanonicalLabel::generateCanLabel(vector<NodeWithInfo* >* nodes, GraphX* gr
 	char* startSB = sb;
 
 	//add the upper triangle thing
-	vector<NodeWithInfo* >::iterator nodesEnd = nodes->end();
+	auto nodesEnd = nodes->end();
 	vector<NodeWithInfo* >::iterator j;
-	vector<NodeWithInfo* >::iterator enum1 = nodes->begin();
+	auto enum1 = nodes->begin();
 	while(true)
 	//for(vector<NodeWithInfo* >::iterator enum1 = nodes->begin();enum1!=nodesEnd;++enum1)
 	{
@@ -717,13 +713,12 @@ map<string, CL_Partition*>* CL_Partition::getNewParts()
 	if(nodes.size()==1)
 		return NULL;
 
-	map<string, CL_Partition* >* parts = new map<string, CL_Partition* >();
-	for(vector<NodeWithInfo*>::iterator enum1 = nodes.begin(); enum1!=nodes.end(); ++enum1)
+	auto* parts = new map<string, CL_Partition* >();
+	for(auto nInfo : nodes)
 	{
-		NodeWithInfo* nInfo = *enum1;
-		string key = nInfo->nl;
+        string key = nInfo->nl;
 
-		map<string, CL_Partition* >::iterator temp = parts->find(key);
+		auto temp = parts->find(key);
 		CL_Partition* part;
 		if(temp==parts->end())
 		{
@@ -766,19 +761,19 @@ vector<vector<NodeWithInfo* >* >* CL_Partition::getCombinations()
 	if(combinations.size()>0)
 		return &combinations;
 
-	vector<NodeWithInfo* >* notused = new vector<NodeWithInfo* >(nodes);
+	auto* notused = new vector<NodeWithInfo* >(nodes);
 
 	//check if all nodes within this partition are only connected to each other
 	//collect all nodes in a map
 	tr1::unordered_set<int> allNodes;
-	for(vector<NodeWithInfo*>::iterator iter = nodes.begin();iter!=nodes.end();iter++)
+	for(auto & node : nodes)
 	{
-		allNodes.insert((*iter)->node->getID());
+		allNodes.insert(node->node->getID());
 	}
 	bool connectedWithin = true;
-	for(vector<NodeWithInfo*>::iterator iter = nodes.begin();iter!=nodes.end();iter++)
+	for(auto & iter : nodes)
 	{
-		NodeX* node = (*iter)->node;
+		NodeX* node = iter->node;
 		for(tr1::unordered_map<int, void*>::iterator iter1 = node->getEdgesIterator();iter1!=node->getEdgesEndIterator();iter1++)
 		{
 			int otherNodeID = ((EdgeX*)iter1->second)->getOtherNode()->getID();
@@ -802,7 +797,7 @@ vector<vector<NodeWithInfo* >* >* CL_Partition::getCombinations()
 void CL_Partition::combinations_fn(vector<NodeWithInfo* >* notused, bool connectedWithin)
 {
 	do{
-		vector<NodeWithInfo* >* v1 = new vector<NodeWithInfo* >(*notused);
+		auto* v1 = new vector<NodeWithInfo* >(*notused);
 		combinations.insert(combinations.end(), v1);
 		//this needs a proof
 		if(connectedWithin)

@@ -18,7 +18,6 @@ int NodeWithInfo::st_counter;
 int PartID_label::st_counter;
 int Pattern::st_counter;
 int Set_Iterator::st_SI;
-bool Settings::useSearchSpacePrediction;
 bool Settings::divideBigTasks;
 bool Settings::debugMSG;
 int Settings::maxSubgraphSize = -1;
@@ -26,7 +25,6 @@ int Settings::maxNumNodes = -1;
 int Settings::fixedNumSubtasks = -1;
 double Settings::minImbalance;
 bool Settings::usePredictedInvColumn;
-bool Settings::smartBreak;
 
 int Settings::minNumberOfSamples;
 int Settings::maxNumberOfSamples;
@@ -36,20 +34,17 @@ long Settings::postponeNodesAfterIterations;
 // user-given seed node
 int Settings::givenType = -1;
 
-int main( int argc, char *argv[] )
+int main()
 {
     //set application parameters
     GraMiCounter::numSideEffectNodes = 0;
     Settings::fixedNumSubtasks = -1;
-    Settings::useSearchSpacePrediction = true;
 //    Settings::divideBigTasks = true;
 //    Settings::predictOnTheGo = true;
     Settings::debugMSG = true;
     Settings::postponeNodesAfterIterations = 10000000;
-    Settings::showNumCandids = false;
     Settings::minImbalance = 15;
     Settings::usePredictedInvColumn = true;
-    Settings::smartBreak = true;
 
     //The miner routine
     Set_Iterator::st_SI = 0;

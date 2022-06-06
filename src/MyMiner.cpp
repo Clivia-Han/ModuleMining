@@ -89,7 +89,7 @@ void MyMiner::startMining(string fileName, int graphType, int support, int given
         domains_solutions.clear();
         char canInfo[50];
         strcpy(canInfo, popMyCandidate(candidates, currentlyChecking, support, -1));
-        cout << "domain_solution size" << endl;
+
         int res, candidateID = 0;
         sscanf(canInfo, "%d,%d", &res, &candidateID);
         if (res == 1) {
@@ -113,10 +113,22 @@ void MyMiner::startMining(string fileName, int graphType, int support, int given
             frequentPatterns[candidate->getSize()]->addPattern(candidate);
             frequentPatternVec.emplace_back(candidate);
 //            frequentPatternsDomain[frequentPatternVec.size()] = candidate->getDomainValues();
+
+            if (Settings::debugMSG) {
+                cout << "insert into frequentPatternsDomain" << endl;
+                cout << "count: " << frequentPatternVec.size()-1 << endl;
+                for (auto & domain : domains_solutions) {
+                    cout << "domain ID: " << domain.first << endl;
+                    for (auto & value : domain.second) {
+                        cout << "value ID: " << value <<endl;
+                    }
+                }
+            }
+
             frequentPatternsDomain[frequentPatternVec.size()-1] = domains_solutions;
 //            frequentPatternsDomain.insert(std::pair<int, map<int, set<int>>>(frequentPatternVec.size(), domains_solutions));
-
-            cout << "size of frequentPatternsDomain: " << frequentPatternsDomain.size() << endl;
+            if (Settings::debugMSG)
+                cout << "size of frequentPatternsDomain: " << frequentPatternsDomain.size() << endl;
 
             //extend using the current frequent patterns with the same size
             if (Settings::debugMSG)
@@ -176,10 +188,10 @@ void MyMiner::startMining(string fileName, int graphType, int support, int given
                 }
             }
         } else {
-            cout << "find candidate and remove" << endl;
+            //cout << "find candidate and remove" << endl;
             Pattern *candidate = currentlyChecking.find(candidateID)->second;
             candidate->setFrequency(0);
-            cout << "erase" << endl;
+            //cout << "erase" << endl;
             currentlyChecking.erase(candidateID);
         }
     }
@@ -205,30 +217,31 @@ void MyMiner::startMining(string fileName, int graphType, int support, int given
 
 //    now delete invalid frePatterns
     int pattern_cnt = 0;
-    for (auto pattern_iter = frequentPatternVec.begin(); pattern_iter != frequentPatternVec.end(); pattern_iter++) {
-        Pattern* frePattern = *pattern_iter;
+    for (auto frePattern : frequentPatternVec) {
         if (Settings::debugMSG) {
             cout << "test this subgraph!" << endl;
             cout << *(frePattern->getGraph()) << endl;
         }
         bool del = false;
-        cout << "test2" << endl;
         printDomains();
         auto domainNodes = frequentPatternsDomain[pattern_cnt];
         if (!domainNodes.empty()) {
             if (Settings::debugMSG) {
                 cout << "subgraph found!";
-            } else {
-                cout << "subgraph not found!";
             }
         }
+        else {
+            cout << "empty domainNodes" << pattern_cnt  << endl;
+        }
 
-        for (auto &domainNode: domainNodes) {
-            int value_num = 0;
-            cout << "domain ID: " << domainNode.first << endl;
-            for (int value_iter: domainNode.second) {
-                cout << "value ID" << value_num << ": " << value_iter << endl;
-                value_num++;
+        if (Settings::debugMSG) {
+            for (auto &domainNode: domainNodes) {
+                int value_num = 0;
+                cout << "domain ID: " << domainNode.first << endl;
+                for (int value_iter: domainNode.second) {
+                    cout << "value ID" << value_num << ": " << value_iter << endl;
+                    value_num++;
+                }
             }
         }
 
@@ -250,8 +263,8 @@ void MyMiner::startMining(string fileName, int graphType, int support, int given
                     continue;
                 }
                 bool flag = false;
-                for (int i = 0; i < linkedDomain.size(); i++) {
-                    if (nodeIter2->second->getID() == linkedDomain[i]) {
+                for (int i : linkedDomain) {
+                    if (nodeIter2->second->getID() == i) {
                         flag = true;
                         break;
                     }
@@ -262,14 +275,16 @@ void MyMiner::startMining(string fileName, int graphType, int support, int given
             }
 
             int num1 = 0;
-            for (int &value_iter: linkedDomain) {
-                cout << "linked value ID" << num1 << ": " << value_iter << endl;
-                num1++;
-            }
-            int num2 = 0;
-            for (int &value_iter: otherDomain) {
-                cout << "other value ID" << num2 << ": " << value_iter << endl;
-                num2++;
+            if (Settings::debugMSG) {
+                for (int &value_iter: linkedDomain) {
+                    cout << "linked value ID" << num1 << ": " << value_iter << endl;
+                    num1++;
+                }
+                int num2 = 0;
+                for (int &value_iter: otherDomain) {
+                    cout << "other value ID" << num2 << ": " << value_iter << endl;
+                    num2++;
+                }
             }
 
             for (auto id: nodeSet) {
@@ -284,18 +299,18 @@ void MyMiner::startMining(string fileName, int graphType, int support, int given
                     }
                 }
                 for (tr1::unordered_map<int, void *>::iterator edgeIter2 = gNode->getEdgesIterator();
-                    edgeIter2 != gNode->getEdgesEndIterator(); ++edgeIter2) {
+                     edgeIter2 != gNode->getEdgesEndIterator(); ++edgeIter2) {
                     // gNode的邻接结点otherNodeID
                     int otherNodeID = edgeIter2->first;
                     bool flag1 = false;
                     for (int k: linkedDomain) {
                         auto linkedValues = domainNodes[k];
                         if (linkedValues.empty()) {
-                            cout << "linkedDomain[k] not found in domainNodes!";
+                            cout << "linkedDomain[k]" << k << " not found in domainNodes!";
                             exit(0);
                         } else {
                             if (Settings::debugMSG) {
-                                cout << "linkedDomain[k] found in domainNodes!";
+                                cout << "linkedDomain[k]"<<k<<" found in domainNodes!";
                             }
                         }
                         // 与当前gNode相连的节点不在pNode的相邻节点的域中
@@ -340,9 +355,13 @@ void MyMiner::startMining(string fileName, int graphType, int support, int given
         if (del) {
 //            frequentPatterns[frePattern->getSize()]->removePattern(frePattern);
 //            frequentPatternVec.erase(pattern_iter);
+            if (Settings::debugMSG) {
+                cout << "delete this graph" << endl;
+                cout << *(frePattern->getGraph()) << endl;
+            }
             delete_pattern_id.insert(pattern_cnt);
-            pattern_cnt++;
         }
+        pattern_cnt++;
     }
     printResult(delete_pattern_id);
 }
@@ -352,41 +371,41 @@ char* MyMiner::popMyCandidate(vector<CLMap*>& candidates, map<int, Pattern*>& cu
     if (Settings::debugMSG)
         cout << "try to pop a candidate ..." << endl;
     static char result[50];
-	bool isFreq = false;
-	CLMap* currentCandidates = 0;
-	for (vector<CLMap*>::iterator iter = candidates.begin(); iter != candidates.end(); iter++)
-	{
-		if ((*iter)->getSize() != 0)
-		{
-			currentCandidates = (*iter);
-			break;
-		}
-	}
+    bool isFreq = false;
+    CLMap* currentCandidates = 0;
+    for (auto & candidate : candidates)
+    {
+        if (candidate->getSize() != 0)
+        {
+            currentCandidates = candidate;
+            break;
+        }
+    }
 
-	if (currentCandidates == 0)
-	{
+    if (currentCandidates == 0)
+    {
         if (Settings::debugMSG)
             cout << "No more candidate ..." << endl;
         result[0] = '0';
-		return result;
-	}
+        return result;
+    }
 
-	if (Settings::debugMSG)
-		cout << "Popping a candidate ..." << endl;
-	//get a candidate, if there is
-	if (currentCandidates->getSize() > 0)
-	{
-		CLMap_Iterator iter = currentCandidates->getFirstElement();
-		string key = iter.key;
-		Pattern* candidate = iter.pattern;
-		currentCandidates->removePattern(candidate);
+    if (Settings::debugMSG)
+        cout << "Popping a candidate ..." << endl;
+    //get a candidate, if there is
+    if (currentCandidates->getSize() > 0)
+    {
+        CLMap_Iterator iter = currentCandidates->getFirstElement();
+        string key = iter.key;
+        Pattern* candidate = iter.pattern;
+        currentCandidates->removePattern(candidate);
 
-		// sendACandidateApprox(key, candidate, currentlyChecking, destination);
-		if (currentlyChecking.find(candidate->getID()) != currentlyChecking.end())
-		{
-			cout << "candidate->getID() = " << candidate->getID() << endl << flush;
-			exit(0);
-		}
+        // sendACandidateApprox(key, candidate, currentlyChecking, destination);
+        if (currentlyChecking.find(candidate->getID()) != currentlyChecking.end())
+        {
+            cout << "candidate->getID() = " << candidate->getID() << endl << flush;
+            exit(0);
+        }
 
         if (Settings::debugMSG) {
             cout << "candidate ID: " << candidate->getID() << endl;
@@ -394,20 +413,21 @@ char* MyMiner::popMyCandidate(vector<CLMap*>& candidates, map<int, Pattern*>& cu
         currentlyChecking[candidate->getID()] = candidate;
 //		currentlyChecking.insert(std::pair<int, Pattern*>(candidate->getID(), candidate));
 
-		Miner::numIsFreqCalls++;
+        Miner::numIsFreqCalls++;
 
-		ostringstream tempOS;
-		tempOS << *(candidate->getGraph());
+        ostringstream tempOS;
+        tempOS << *(candidate->getGraph());
         char graphStr[2000];
         sprintf(graphStr, "%d,%s\t", candidate->getID(),tempOS.str().c_str());
-        cout << "now pattern: " << graphStr << endl;
-		
-		isFreq = workCount(graphStr, support, approximate);
+        if (Settings::debugMSG)
+            cout << "now pattern: " << graphStr << endl;
+
+        isFreq = workCount(graphStr, support, approximate);
         int fre = isFreq ? 1 : 0;
         sprintf(result, "%d,%d", fre, candidate->getID());
-	}
+    }
 
-	return result;
+    return result;
 }
 
 void clearAllMP(tr1::unordered_map<string, void* >& allMP)
@@ -420,8 +440,8 @@ void clearAllMP(tr1::unordered_map<string, void* >& allMP)
 }
 
 bool MyMiner::workCount(char* graphStr, int support, double approximate) {
-	tr1::unordered_map<string, void* > allMPs;
-	GraphX* subgraph = new GraphX(1, false);
+    tr1::unordered_map<string, void* > allMPs;
+    GraphX* subgraph = new GraphX(1, false);
 
     int candidateID;
     char subgraphTemp[500];
@@ -430,100 +450,97 @@ bool MyMiner::workCount(char* graphStr, int support, double approximate) {
     sstmGF << subgraphTemp;
     string subgraphStr = sstmGF.str();
     subgraph->loadFromString(subgraphStr, allMPs);
-	clearAllMP(allMPs);
-	Pattern* newCandidate = new Pattern(subgraph, false);
-    cout << "now candidate edgeLabel: " << endl;
-
-    cout << *(newCandidate->getGraph()) << endl;
+    clearAllMP(allMPs);
+    Pattern* newCandidate = new Pattern(subgraph, false);
 
     unsigned long startTime = getmsofday();
-	int freq = getFreq(newCandidate, support, approximate);
-
-	bool isFreq;
-	if (freq >= support) {
+    int freq = getFreq(newCandidate, support, approximate);
+    bool isFreq;
+    if (freq >= support) {
         isFreq = true;
-        for (auto & domains_solution : domains_solutions) {
-            cout << "domain ID: " << domains_solution.first << "domain size: " << domains_solution.second.size() << endl;
-            for (auto & value_iter : domains_solution.second) {
-                cout << "value ID: " << value_iter;
-            }
-        }
+//        cout << "test in fuc workCount" << endl;
+//        cout << *subgraph;
+//        for (auto & domains_solution : domains_solutions) {
+//            cout << "domain ID: " << domains_solution.first << "domain size: " << domains_solution.second.size() << endl;
+//            for (auto & value_iter : domains_solution.second) {
+//                cout << "value ID: " << value_iter;
+//            }
+//        }
     }
-	else
-		isFreq = false;
+    else
+        isFreq = false;
 
-	unsigned long elapsed = getmsofday() - startTime;
+    unsigned long elapsed = getmsofday() - startTime;
 
-	if (Settings::debugMSG)
-		printf("Time taken is: %Lu. Predicted total time is: %lu\n", elapsed);
+    if (Settings::debugMSG)
+        printf("Time taken is: %Lu. Predicted total time is: %lu\n", elapsed);
 
-	delete subgraph;
-	delete newCandidate;
-
-	return isFreq;
+    delete subgraph;
+    delete newCandidate;
+    if (isFreq && Settings::debugMSG) {
+        cout << "workCount True!" << endl;
+    }
+    return isFreq;
 }
 
 
 void MyMiner::printTotalExpectedTime()
 {
-	vector<CLMap* >* allPatterns[2];
-	allPatterns[0] = &frequentPatterns;
-	allPatterns[1] = &infrequentPatterns;
+    vector<CLMap* >* allPatterns[2];
+    allPatterns[0] = &frequentPatterns;
+    allPatterns[1] = &infrequentPatterns;
 
-	unsigned long int totatTime = 0;
+    unsigned long int totatTime = 0;
 
-	//add to candidates
-	for (int l = 0; l < 2; l++)
-	{
-
-		for (vector<CLMap* >::iterator iter = allPatterns[l]->begin(); iter != allPatterns[l]->end(); iter++)
-		{
-			CLMap* tempMap = (*iter);
-			CLMap_Iterator iter1 = tempMap->getFirstElement();
-			while (iter1.pattern != 0)
-			{
-				Pattern* pattern = iter1.pattern;//->second;
-				tempMap->advanceIterator(iter1);
-				totatTime += pattern->getPredictedTime();
-			}
-		}
-	}
+    //add to candidates
+    for (int l = 0; l < 2; l++)
+    {
+        for (vector<CLMap* >::iterator iter = allPatterns[l]->begin(); iter != allPatterns[l]->end(); iter++)
+        {
+            CLMap* tempMap = (*iter);
+            CLMap_Iterator iter1 = tempMap->getFirstElement();
+            while (iter1.pattern != 0)
+            {
+                Pattern* pattern = iter1.pattern;//->second;
+                tempMap->advanceIterator(iter1);
+                totatTime += pattern->getPredictedTime();
+            }
+        }
+    }
 }
 
 int MyMiner::getFreq(Pattern* candidate, int support, double approximate)
 {
-    cout << "now counting freq!" << endl;
-	vector<unsigned long> listOfNumOfIters;
-	int freq = GraMiCounter::isFrequent(graph, candidate, support, approximate, domains_solutions);
-	return freq;
+    //cout << "now counting freq!" << endl;
+    vector<unsigned long> listOfNumOfIters;
+    int freq = 0;
+    freq = GraMiCounter::isFrequent(graph, candidate, support, approximate, domains_solutions);
+    if (Settings::debugMSG) {
+        if (freq >= support) {
+            cout << *candidate->getGraph();
+            for (auto &domains_solution: domains_solutions) {
+                cout << "domain ID: " << domains_solution.first << "domain size: " << domains_solution.second.size()
+                     << endl;
+                for (auto &value_iter: domains_solution.second) {
+                    cout << "value ID: " << value_iter;
+                }
+            }
+        }
+    }
+    return freq;
 }
 
 
-
-//void MyMiner::printResult(vector<CLMap* >& data)
-//{
-//    //count the total number of frequent patterns
-//    int size = 0;
-//    for(unsigned int i=0;i<data.size();i++)
-//    {
-//        size+=data[i]->getSize();
-//    }
-//    int count = 1;
-//    cout<<"Miner found "<<size<<" frequent patterns, and they are:"<<endl;
-//    for(unsigned int i=0;i<data.size();i++)
-//    {
-//        cout<<"With "<<(i)<<" edges:"<<endl;
-//        data[i]->print(count);
-//        count+=data[i]->getSize();
-//    }
-//}
-
 void MyMiner::printResult(tr1::unordered_set<int> delete_pattern_id) {
+    cout << "print final result!";
     int cnt = 0;
     for (auto & pattern : frequentPatternVec) {
         if (delete_pattern_id.find(cnt)!=delete_pattern_id.end()) {
+            cnt++;
             continue;
         }
+        cout << endl;
+        cout << "*****frequent pattern " << cnt << "*****" << endl;
         cout << *(frequentPatternVec[cnt]->getGraph()) << endl;
         auto now_domain = frequentPatternsDomain[cnt];
         for (auto &map_iter: now_domain) {
@@ -534,11 +551,14 @@ void MyMiner::printResult(tr1::unordered_set<int> delete_pattern_id) {
                 cout << value_iter << endl;
             }
         }
+        cout << "**************************" << endl;
+        cnt++;
     }
 }
 
 void MyMiner::printDomains() {
     for (auto &pattern_iter: frequentPatternsDomain) {
+        cout << "subgraph" << pattern_iter.first << ":" << endl;
         cout << *(frequentPatternVec[pattern_iter.first]->getGraph()) << endl;
         for (auto &map_iter: pattern_iter.second) {
             cout << "domain: " << map_iter.first << endl;
