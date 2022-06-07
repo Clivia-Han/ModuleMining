@@ -4,8 +4,7 @@
 
 #include "EdgeX.h"
 
-EdgeX::EdgeX(double label, NodeX* otherNode)
-{
-	this->label = label;
-	this->otherNode = otherNode;
+EdgeX::EdgeX(double label, NodeX *other_node) {
+    this->label = label;
+    this->other_node = other_node;
 }

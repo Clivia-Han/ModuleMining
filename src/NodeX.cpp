@@ -8,149 +8,136 @@
 #include "EdgeX.h"
 #include "NodeX.h"
 
-NodeX::NodeX(int id, double label)
-{
-	this->id = id;
-	this->label = label;
+NodeX::NodeX(int id, double label) {
+    this->id = id;
+    this->label = label;
 }
 
-NodeX::~NodeX()
-{
-	for( tr1::unordered_map<int, void*>::const_iterator ii=edges.begin(); ii!=edges.end(); ++ii)
-    {
-    	EdgeX* edge = (EdgeX*)((*ii).second);
-    	delete edge;
+NodeX::~NodeX() {
+    for (tr1::unordered_map<int, void *>::const_iterator ii = edges.begin(); ii != edges.end(); ++ii) {
+        EdgeX *edge = (EdgeX *) ((*ii).second);
+        delete edge;
     }
-	edges.clear();
+    edges.clear();
 
-	for( tr1::unordered_map<int, void*>::const_iterator ii=revEdges.begin(); ii!=revEdges.end(); ++ii)
-	{
-	  	EdgeX* edge = (EdgeX*)((*ii).second);
-	   	delete edge;
-	}
-	revEdges.clear();
+    for (tr1::unordered_map<int, void *>::const_iterator ii = rev_edges.begin(); ii != rev_edges.end(); ++ii) {
+        EdgeX *edge = (EdgeX *) ((*ii).second);
+        delete edge;
+    }
+    rev_edges.clear();
 }
 
 /**
  * Add an edge to this node
  * Parameters: the other node, and the edge label
  */
-void NodeX::addEdge(NodeX* otherNode, double edgeLabel, int graphType)
-{
-	// edges为当前结点关联的所有边
-	if(edges.find(otherNode->getID())!=edges.end())
-		return;
-	EdgeX* edge = new EdgeX(edgeLabel, otherNode);
+void NodeX::add_edge(NodeX *other_node, double edge_label, int graph_type) {
+    // edges为当前结点关联的所有边
+    if (edges.find(other_node->get_id()) != edges.end())
+        return;
+    EdgeX *edge = new EdgeX(edge_label, other_node);
 
-	edges[otherNode->getID()] = edge;
+    edges[other_node->get_id()] = edge;
 
-	if(graphType==1)
-	{
-		EdgeX* edge = new EdgeX(edgeLabel, this);
-		otherNode->revEdges[this->getID()] = edge;
-	}
+    if (graph_type == 1) {
+        EdgeX *edge = new EdgeX(edge_label, this);
+        other_node->rev_edges[this->get_id()] = edge;
+    }
 }
 
-void NodeX::removeEdge(NodeX* otherNode, int graphType)
-{
-	tr1::unordered_map<int, void*>::iterator iter = edges.find(otherNode->getID());
-	if(iter!=edges.end())
-		delete iter->second;
-	edges.erase(otherNode->getID());
+void NodeX::remove_edge(NodeX *other_node, int graph_type) {
+    tr1::unordered_map<int, void *>::iterator iter = edges.find(other_node->get_id());
+    if (iter != edges.end())
+        delete iter->second;
+    edges.erase(other_node->get_id());
 
-	if(graphType==1)
-	{
-		//do somethingh here
-		tr1::unordered_map<int, void*>::iterator iter = otherNode->revEdges.find(this->getID());
-		if(iter!=revEdges.end())
-			delete iter->second;
-		revEdges.erase(this->getID());
-	}
+    if (graph_type == 1) {
+        //do somethingh here
+        tr1::unordered_map<int, void *>::iterator iter = other_node->rev_edges.find(this->get_id());
+        if (iter != rev_edges.end())
+            delete iter->second;
+        rev_edges.erase(this->get_id());
+    }
 }
 
-void* NodeX::getEdgeForDestNode(int destNodeID )
-{
-	tr1::unordered_map<int, void*>::iterator temp = edges.find(destNodeID);
-	if(temp==edges.end())
-		return NULL;
-	else
-		return (*temp).second;
+void *NodeX::get_edge_for_dest_node(int dest_node_id) {
+    tr1::unordered_map<int, void *>::iterator temp = edges.find(dest_node_id);
+    if (temp == edges.end())
+        return NULL;
+    else
+        return (*temp).second;
 }
 
-bool NodeX::isItConnectedWithNodeID(int nodeID)
-{
-	//check node connectivity
-	tr1::unordered_map<int, void*>::iterator iter = edges.find(nodeID);
-	if(iter==edges.end())
-		return false;
+bool NodeX::is_it_connected_with_node_id(int node_id) {
+    //check node connectivity
+    tr1::unordered_map<int, void *>::iterator iter = edges.find(node_id);
+    if (iter == edges.end())
+        return false;
 
-	return true;
+    return true;
 }
 
-bool NodeX::isItConnectedWithNodeID(int nodeID, double label)
-{
-	//check node connectivity
-	tr1::unordered_map<int, void*>::iterator iter = edges.find(nodeID);
-	if(iter==edges.end())
-		return false;
+bool NodeX::is_it_connected_with_node_id(int node_id, double label) {
+    //check node connectivity
+    tr1::unordered_map<int, void *>::iterator iter = edges.find(node_id);
+    if (iter == edges.end())
+        return false;
 
-	//check edge label
-	if(((EdgeX*)iter->second)->getLabel()!=label)
-		return false;
+    //check edge label
+    if (((EdgeX *) iter->second)->get_label() != label)
+        return false;
 
-	return true;
+    return true;
 }
 
 /**
  * check whether the 'node' parameter in neighborhood consistent with 'this' node
  */
-bool NodeX::isNeighborhoodConsistent(NodeX* node)
-{
-	//该方法实际上是在比较当前节点与node节点的所有邻居中，每个标签出现的总次数（标签分布）是否相等
-	tr1::unordered_map<double, int> labels;
-	//populate labels of this node
-	for(tr1::unordered_map<int, void*>::iterator iter = edges.begin();iter!=edges.end();iter++)
-	{
-		//统计当前节点的相邻节点的标签，计算每个标签对应的出现次数
-		double otherNodeLabel = ((EdgeX*)iter->second)->getLabel();
-		tr1::unordered_map<double, int>::iterator tempIter = labels.find(otherNodeLabel);
-		if(tempIter==labels.end())
-			labels.insert(std::pair<double, int>(otherNodeLabel, 1));
-		else
-		{
-			int currentCount = tempIter->second;
-			labels.erase(otherNodeLabel);
-			labels.insert(std::pair<double, int>(otherNodeLabel, currentCount+1));
-		}
-	}
+bool NodeX::is_neighborhood_consistent(NodeX *node) {
+    // This method actually compares whether the total number of occurrences of each label (label distribution)
+    // is equal in all neighbors of the current node and node node.
+    tr1::unordered_map<double, int> labels;
+    // populate labels of this node
+    for (tr1::unordered_map<int, void *>::iterator iter = edges.begin(); iter != edges.end(); iter++) {
+        // Count the labels of adjacent nodes,
+        // and calculate the number of occurrences corresponding to each label
+        double other_node_label = ((EdgeX *) iter->second)->get_label();
+        tr1::unordered_map<double, int>::iterator temp_iter = labels.find(other_node_label);
+        if (temp_iter == labels.end())
+            labels.insert(std::pair<double, int>(other_node_label, 1));
+        else {
+            int current_count = temp_iter->second;
+            labels.erase(other_node_label);
+            labels.insert(std::pair<double, int>(other_node_label, current_count + 1));
+        }
+    }
 
-	//check labels against this's labels
-	for(tr1::unordered_map<int, void*>::iterator iter = node->getEdgesIterator();iter!=node->getEdgesEndIterator();iter++)
-	{
-		//遍历node节点的相邻节点
-		double otherNodeLabel = ((EdgeX*)iter->second)->getLabel();
-		//如果node节点的相邻节点对应的标签在当前节点的相邻节点标签集中未出现，返回false
-		tr1::unordered_map<double, int>::iterator tempIter = labels.find(otherNodeLabel);
-		if(tempIter==labels.end())
-			return false;
-		//否则将该标签在labels字典中的对应值-1
-		int currentCount = tempIter->second;
-		labels.erase(otherNodeLabel);
-		if(currentCount>1)	//如果currentCount<1，那么相当于从labels字典中直接去掉otherNodeLabel
-			labels.insert(std::pair<double, int>(otherNodeLabel, currentCount-1));
-	}
+    //check labels against this's labels
+    for (tr1::unordered_map<int, void *>::iterator iter = node->get_edges_iterator(); iter !=
+                                                                                      node->get_edges_end_iterator(); iter++) {
+        //Traverse the adjacent nodes of the node
+        double other_node_label = ((EdgeX *) iter->second)->get_label();
+        //If the label of the adjacent node of the "node" does not appear in the label set of the current node's adjacent node, return false
+        tr1::unordered_map<double, int>::iterator temp_iter = labels.find(other_node_label);
+        if (temp_iter == labels.end())
+            return false;
+        //Otherwise, the corresponding value of the label in the labels dictionary is -1
+        int current_count = temp_iter->second;
+        labels.erase(other_node_label);
+        if (current_count > 1)    //If currentCount<=1, then it is equivalent to directly remove otherNodeLabel from the labels dictionary
+            labels.insert(std::pair<double, int>(other_node_label, current_count - 1));
+    }
 
-	return true;
+    return true;
 }
 
-ostream& operator<<(ostream& os, const NodeX& n)
-{
-	//用指定格式输出节点n及其项链的所有边的信息（包括边标签和连接点）到os
-    os << n.id << '[' << n.label << "]" <<endl;
-    for( tr1::unordered_map<int, void*>::const_iterator ii=n.edges.begin(); ii!=n.edges.end(); ++ii)
-    {
-    	EdgeX* edge = (EdgeX*)((*ii).second);
-    	os<<"--"<<edge->getLabel()<<"-->"<<edge->getOtherNode()->getID()<<endl;
+ostream &operator<<(ostream &os, const NodeX &n) {
+    // Output the information of node "n" and all its connected edges
+    // (including edge labels and connection points) to os in the specified format
+    os << n.id << '[' << n.label << "]" << endl;
+    for (tr1::unordered_map<int, void *>::const_iterator ii = n.edges.begin(); ii != n.edges.end(); ++ii) {
+        EdgeX *edge = (EdgeX *) ((*ii).second);
+        os << "--" << edge->get_label() << "-->" << edge->get_other_node()->get_id() << endl;
     }
     return os;
 }

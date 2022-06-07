@@ -9,35 +9,31 @@ MyMiner.h
 
 #include "Miner.h"
 
-class MyMiner : public Miner
-{
+class MyMiner : public Miner {
 public:
-	static long maxNumCandids;
-	map<int, set<int>> domains_solutions;
-//	map<Pattern*, map<int, set<int>*>> frequentPatternsDomain;
+    static long max_num_candids;
+    map<int, set<int>> domains_solutions;
+//	map<Pattern*, map<int, set<int>*>> frequent_patterns_domain;
 
-	unsigned long numOfVisitedNodes;
-	unsigned long numIterations;
+    void start_mining(string file_name, int graph_type, int support, int given_type);
 
-	int nThreads;
+    void set_input_graph(GraphX *g) { this->graph = g; }
 
-	void startMining(string, int, int, int);
-//	bool popACandidateApprox(vector<CLMap*>&, map<int, Pattern*>&, int destination);
-//	void sendACandidateApprox(string, Pattern*, map<int, Pattern*>&, int);
+    GraphX *get_input_graph() { return graph; }
 
-	void setInputGraph(GraphX* g) { this->graph = g; }
-	GraphX* getInputGraph() { return graph; }
-	void printTotalExpectedTime();
-    void printDomains();
-    void printResult(tr1::unordered_set<int> delete_pattern_id);
+    void print_total_expected_time();
 
-    char*
-    popMyCandidate(vector<CLMap *> &candidates, map<int, Pattern *> &currentlyChecking, int support,
-                   double approximate);
+    void print_domains();
 
-    bool workCount(char* graphStr, int support, double approximate);
+    void print_result(tr1::unordered_set<int> delete_pattern_id);
 
-    int getFreq(Pattern *candidate, int support, double approximate);
+    char *
+    pop_my_candidate(vector<CLMap *> &candidates, map<int, Pattern *> &currently_checking, int support,
+                     double approximate);
+
+    bool work_count(char *graph_str, int support, double approximate);
+
+    int get_freq(Pattern *candidate, int support, double approximate);
 };
 
 #endif /* MINERADV_H_ */

@@ -18,185 +18,167 @@
 #include "Settings.h"
 #include <iomanip>
 
-bool checkCurrentStatus(GraphX* graph1, GraphX* graph2, vector<Set_Iterator* >& currentS, int* nodesOrder, tr1::unordered_map<int, int>& selectedQueryMap)
-{
-	NodeX* dataGraphNode = graph2->getNodeWithID(*(currentS[currentS.size()-1]->it));
-	NodeX* queryGraphNode = graph1->getNodeWithID(nodesOrder[currentS.size()-1]);
+bool check_current_status(GraphX *graph1, GraphX *graph2, vector<Set_Iterator *> &current_s, int *nodes_order,
+                          tr1::unordered_map<int, int> &selected_query_map) {
+    NodeX *data_graph_node = graph2->get_node_with_id(*(current_s[current_s.size() - 1]->it));
+    NodeX *query_graph_node = graph1->get_node_with_id(nodes_order[current_s.size() - 1]);
 
-	for(tr1::unordered_map<int, void*>::iterator iter = queryGraphNode->getEdgesIterator();iter!=queryGraphNode->getEdgesEndIterator();++iter)
-	{
-		int otherNodeID = iter->first;
-		EdgeX* edge = (EdgeX*)(iter->second);
+    for (tr1::unordered_map<int, void *>::iterator iter = query_graph_node->get_edges_iterator(); iter !=
+                                                                                                  query_graph_node->get_edges_end_iterator(); ++iter) {
+        int other_node_id = iter->first;
+        EdgeX *edge = (EdgeX *) (iter->second);
 
-		if(selectedQueryMap.find(otherNodeID)==selectedQueryMap.end())
-			continue;
+        if (selected_query_map.find(other_node_id) == selected_query_map.end())
+            continue;
 
-		//get the data node that the current data node should be connected with
-		// selectedQueryMap.find(otherNodeID)->second 是 query图中otherNodeID对应的结点的order
-		// 下面找到data图中对应的结点ID
-		int dataNodeID = *(currentS[selectedQueryMap.find(otherNodeID)->second]->it);
+        //get the data node that the current data node should be connected with
+        // selected_query_map.find(other_node_id)->second 是 query图中otherNodeID对应的结点的order
+        // 下面找到data图中对应的结点ID
+        int data_node_id = *(current_s[selected_query_map.find(other_node_id)->second]->it);
 
-		//check the current graph edges, whether it has a connection to dataNodeID or not
-		if(!dataGraphNode->isItConnectedWithNodeID(dataNodeID, edge->getLabel()))
-		{
-			//cout<<"false"<<endl;
-			return false;
-		}
-	}
+        //check the current graph edges, whether it has a connection to data_node_id or not
+        if (!data_graph_node->is_it_connected_with_node_id(data_node_id, edge->get_label())) {
+            //cout<<"false"<<endl;
+            return false;
+        }
+    }
 
-	return true;
+    return true;
 }
 
-void insertIntoEdgeFreq(NodeX* src, int destNodeID, double destNodeLabel, double edgeLabel, tr1::unordered_map<string, void* >& edgeToFreq, bool addSrcOnly)
-{
-	string key;
-	if(src->getLabel()>destNodeLabel)
-	{
-		stringstream sstmGF;
-		if(src->getLabel()==destNodeLabel)
-			sstmGF << src->getLabel()<<destNodeLabel<<","<<edgeLabel<<",";
-		else
-			sstmGF << src->getLabel()<<","<<destNodeLabel<<","<<edgeLabel<<",";
-		key = sstmGF.str();
-	}
-	else
-	{
-		stringstream sstmGF;
-		if(destNodeLabel==src->getLabel())
-			sstmGF <<destNodeLabel<<src->getLabel()<<","<<edgeLabel<<",";
-		else
-			sstmGF <<destNodeLabel<<","<<src->getLabel()<<","<<edgeLabel<<",";
-		key = sstmGF.str();
-	}
+void insert_into_edge_freq(NodeX *src, int dest_node_id, double dest_node_label, double edge_label,
+                           tr1::unordered_map<string, void *> &edge_to_freq, bool add_src_only) {
+    string key;
+    if (src->get_label() > dest_node_label) {
+        stringstream ss;
+        if (src->get_label() == dest_node_label)
+            ss << src->get_label() << dest_node_label << "," << edge_label << ",";
+        else
+            ss << src->get_label() << "," << dest_node_label << "," << edge_label << ",";
+        key = ss.str();
+    } else {
+        stringstream ss;
+        if (dest_node_label == src->get_label())
+            ss << dest_node_label << src->get_label() << "," << edge_label << ",";
+        else
+            ss << dest_node_label << "," << src->get_label() << "," << edge_label << ",";
+        key = ss.str();
+    }
 
-	tr1::unordered_map<string, void* >::iterator iter = edgeToFreq.find(key);
-	Pattern* pattern;
-	if(iter==edgeToFreq.end())
-	{
-		GraphX* graph = new GraphX();
-		NodeX* node1 = graph->AddNode(0, src->getLabel());
-		NodeX* node2 = graph->AddNode(1, destNodeLabel);
-		graph->addEdge(node1, node2, edgeLabel);
-		pattern = new Pattern(graph);
-		delete graph;
+    tr1::unordered_map<string, void *>::iterator iter = edge_to_freq.find(key);
+    Pattern *pattern;
+    if (iter == edge_to_freq.end()) {
+        GraphX *graph = new GraphX();
+        NodeX *node1 = graph->add_node(0, src->get_label());
+        NodeX *node2 = graph->add_node(1, dest_node_label);
+        graph->add_edge(node1, node2, edge_label);
+        pattern = new Pattern(graph);
+        delete graph;
 
-		edgeToFreq[key] = pattern;
-	}
-	else
-	{
-		pattern = (Pattern*)((*iter).second);
-	}
+        edge_to_freq[key] = pattern;
+    } else {
+        pattern = (Pattern *) ((*iter).second);
+    }
 
-	if(pattern->getGraph()->getNodeWithID(0)->getLabel()==src->getLabel())
-	{
-		pattern->addNode(src->getID(), 0);
-		if(!addSrcOnly) pattern->addNode(destNodeID, 1);
-	}
-	else
-	{
-		pattern->addNode(src->getID(), 1);
-		if(!addSrcOnly) pattern->addNode(destNodeID, 0);
-	}
+    if (pattern->get_graph()->get_node_with_id(0)->get_label() == src->get_label()) {
+        pattern->add_node(src->get_id(), 0);
+        if (!add_src_only) pattern->add_node(dest_node_id, 1);
+    } else {
+        pattern->add_node(src->get_id(), 1);
+        if (!add_src_only) pattern->add_node(dest_node_id, 0);
+    }
 }
 
 /**
  * Constructor
  */
-GraphX::GraphX()
-{
-	init(0,0);
+GraphX::GraphX() {
+    init(0, 0);
 }
 
-GraphX::GraphX(int id, int type)
-{
-	init(id, type);
+GraphX::GraphX(int id, int type) {
+    init(id, type);
 }
 
-void GraphX::init(int id, int type)
-{
-	this->id = id;
-	this->type = type;
-	if(type==1)
-	{
-		cout<<"IMPORTANT! current set of algorithms are not tested on directed graphs!";
-		exit(0);
-	}
-	numOfEdges = 0;
-	this->freq = -1;
+void GraphX::init(int id, int type) {
+    this->id = id;
+    this->type = type;
+    if (type == 1) {
+        cout << "IMPORTANT! current set of algorithms are not tested on directed graphs!";
+        exit(0);
+    }
+    num_of_edges = 0;
+    this->freq = -1;
 }
 
-GraphX::GraphX(GraphX* graph)
-{
-	this->id = graph->getID();
-	this->type = graph->getType();
-	numOfEdges = graph->getNumOfEdges();
+GraphX::GraphX(GraphX *graph) {
+    this->id = graph->get_id();
+    this->type = graph->get_type();
+    num_of_edges = graph->get_num_of_edges();
 
-	//copy nodes
-	for(tr1::unordered_map<int, NodeX*>::const_iterator iter = graph->getNodesIterator();iter!=graph->getNodesEndIterator();++iter)
-	{
-		NodeX* oldNode = iter->second;
-		this->AddNode(oldNode->getID(), oldNode->getLabel());
-	}
+    //copy nodes
+    for (tr1::unordered_map<int, NodeX *>::const_iterator iter = graph->get_nodes_iterator(); iter !=
+                                                                                              graph->get_nodes_end_iterator(); ++iter) {
+        NodeX *oldNode = iter->second;
+        this->add_node(oldNode->get_id(), oldNode->get_label());
+    }
 
-	//copy edges
-	for(tr1::unordered_map<int, NodeX*>::const_iterator iter = graph->getNodesIterator();iter!=graph->getNodesEndIterator();++iter)
-	{
-		NodeX* oldNode = iter->second;
-		NodeX* node = nodes.find(oldNode->getID())->second;
+    //copy edges
+    for (tr1::unordered_map<int, NodeX *>::const_iterator iter = graph->get_nodes_iterator(); iter !=
+                                                                                              graph->get_nodes_end_iterator(); ++iter) {
+        NodeX *old_node = iter->second;
+        NodeX *node = nodes.find(old_node->get_id())->second;
 
-		for(tr1::unordered_map<int, void*>::iterator iter2 = oldNode->getEdgesIterator();iter2!=oldNode->getEdgesEndIterator();++iter2)
-		{
-			EdgeX* edge = (EdgeX*)(iter2->second);
-			node->addEdge(nodes.find(edge->getOtherNode()->getID())->second, edge->getLabel(), this->type);
-		}
-	}
+        for (tr1::unordered_map<int, void *>::iterator iter2 = old_node->get_edges_iterator(); iter2 !=
+                                                                                               old_node->get_edges_end_iterator(); ++iter2) {
+            EdgeX *edge = (EdgeX *) (iter2->second);
+            node->add_edge(nodes.find(edge->get_other_node()->get_id())->second, edge->get_label(), this->type);
+        }
+    }
 }
 
 /**
  * Add a node to the graph
  * Parameters are: node id, and node label
  */
-NodeX* GraphX::AddNode(int id, double label)
-{
-	CL.clear();
+NodeX *GraphX::add_node(int id, double label) {
+    CL.clear();
 
-	tr1::unordered_map<int, NodeX*>::iterator temp = nodes.find(id);
-	if(temp!=nodes.end())
-		return temp->second;
+    tr1::unordered_map<int, NodeX *>::iterator temp = nodes.find(id);
+    if (temp != nodes.end())
+        return temp->second;
 
-	NodeX* node = new NodeX(id, label);
+    NodeX *node = new NodeX(id, label);
 
-	nodes.insert(std::pair<int, NodeX*>(id, node));
+    nodes.insert(std::pair<int, NodeX *>(id, node));
 
-	//add to the 'nodes by label' map
-	tr1::unordered_map<double, set<int>* >::iterator iter = nodesByLabel.find(label);
-	if(iter==nodesByLabel.end())
-	{
-		nodesByLabel.insert(std::pair<double, set<int>*>(label, new set<int>()));
-		iter = nodesByLabel.find(label);
-	}
-	iter->second->insert(id);
+    //add to the 'nodes by label' map
+    tr1::unordered_map<double, set<int> *>::iterator iter = nodes_by_label.find(label);
+    if (iter == nodes_by_label.end()) {
+        nodes_by_label.insert(std::pair<double, set<int> *>(label, new set<int>()));
+        iter = nodes_by_label.find(label);
+    }
+    iter->second->insert(id);
 
-	return node;
+    return node;
 }
 
-bool GraphX::CanSatisfyNodeLabels(GraphX* otherG)
-{
-	for(tr1::unordered_map<double, set<int>* >::iterator iter = otherG->nodesByLabel.begin();iter!=otherG->nodesByLabel.end();iter++)
-	{
-		double label = (*iter).first;
-		int count = (*iter).second->size();
-		if(count==0) continue;
+bool GraphX::can_satisfy_node_labels(GraphX *other_g) {
+    for (tr1::unordered_map<double, set<int> *>::iterator iter = other_g->nodes_by_label.begin();
+         iter != other_g->nodes_by_label.end(); iter++) {
+        double label = (*iter).first;
+        int count = (*iter).second->size();
+        if (count == 0) continue;
 
-		tr1::unordered_map<double, set<int>* >::iterator thisIter = nodesByLabel.find(label);
-		if(thisIter==nodesByLabel.end())
-			return false;
-		int thisCount = (*iter).second->size();
-		if(thisCount<count)
-			return false;
-	}
+        tr1::unordered_map<double, set<int> *>::iterator this_iter = nodes_by_label.find(label);
+        if (this_iter == nodes_by_label.end())
+            return false;
+        int this_count = (*iter).second->size();
+        if (this_count < count)
+            return false;
+    }
 
-	return true;
+    return true;
 }
 
 /**
@@ -204,376 +186,343 @@ bool GraphX::CanSatisfyNodeLabels(GraphX* otherG)
  * Parameters: the source node ID, the destination node ID, and the edge label
  * For undirected graphs, one more edge will be added in the reverse direction
  */
-void GraphX::addEdge(NodeX* srcNode, NodeX* destNode, double edgeLabel)
-{
-	CL.clear();
+void GraphX::add_edge(NodeX *src_node, NodeX *dest_node, double edge_label) {
+    CL.clear();
 
-	srcNode->addEdge(destNode, edgeLabel, this->type);
+    src_node->add_edge(dest_node, edge_label, this->type);
 
-	if(this->type==0)
-	{
-		destNode->addEdge(srcNode, edgeLabel, this->type);
-	}
+    if (this->type == 0) {
+        dest_node->add_edge(src_node, edge_label, this->type);
+    }
 
-	numOfEdges++;
+    num_of_edges++;
 }
 
 /**
  * Add an edge to this graph given source node, destination node, and an edge label
  */
-void GraphX::addEdge(int srcID, int destID, double edgeLabel)
-{
-	CL.clear();
+void GraphX::add_edge(int src_id, int dest_id, double edge_label) {
+    CL.clear();
 
-	NodeX* srcNode;
-	NodeX* destNode;
+    NodeX *src_node;
+    NodeX *dest_node;
 
-	tr1::unordered_map<int, NodeX*>::iterator iter = nodes.find(srcID);
-	if(iter!=nodes.end())
-		srcNode = nodes[srcID];
-	else
-		return;
+    tr1::unordered_map<int, NodeX *>::iterator iter = nodes.find(src_id);
+    if (iter != nodes.end())
+        src_node = nodes[src_id];
+    else
+        return;
 
-	iter = nodes.find(destID);
-	if(iter!=nodes.end())
-		destNode = nodes[destID];
-	else
-		return;
+    iter = nodes.find(dest_id);
+    if (iter != nodes.end())
+        dest_node = nodes[dest_id];
+    else
+        return;
 
-	srcNode->addEdge(destNode, edgeLabel, this->type);
+    src_node->add_edge(dest_node, edge_label, this->type);
 
-	if(this->type==0)
-	{
-		destNode->addEdge(srcNode, edgeLabel, this->type);
-	}
+    if (this->type == 0) {
+        dest_node->add_edge(src_node, edge_label, this->type);
+    }
 
-	numOfEdges++;
+    num_of_edges++;
 
-	return;
+    return;
 }
 
 /**
  * remove an edge by its incident node ids
  */
-void GraphX::removeEdge(int id1, int id2)
-{
-	CL.clear();
+void GraphX::remove_edge(int id1, int id2) {
+    CL.clear();
 
-	nodes[id1]->removeEdge(nodes[id2], this->type);
-	if(nodes[id1]->getEdgesSize()==0)
-		removeNode_IgnoreEdges(id1);
+    nodes[id1]->remove_edge(nodes[id2], this->type);
+    if (nodes[id1]->get_edges_size() == 0)
+        remove_node_ignore_edges(id1);
 
-	if(this->type==0)
-	{
-		nodes[id2]->removeEdge(nodes[id1], this->type);
-		if(nodes[id2]->getEdgesSize()==0)
-			removeNode_IgnoreEdges(id2);
-	}
+    if (this->type == 0) {
+        nodes[id2]->remove_edge(nodes[id1], this->type);
+        if (nodes[id2]->get_edges_size() == 0)
+            remove_node_ignore_edges(id2);
+    }
 
-	numOfEdges--;
+    num_of_edges--;
 }
 
 /**
  * remove a node from the graph, ignoring edges (as a prepost all edges connecting to this node should be already removed)
  */
-void GraphX::removeNode_IgnoreEdges(int nodeID)
-{
-	CL.clear();
+void GraphX::remove_node_ignore_edges(int node_id) {
+    CL.clear();
 
-	nodesByLabel.find(getNodeWithID(nodeID)->getLabel())->second->erase(nodeID);
-	delete nodes.find(nodeID)->second;
-	nodes.erase(nodeID);
+    nodes_by_label.find(get_node_with_id(node_id)->get_label())->second->erase(node_id);
+    delete nodes.find(node_id)->second;
+    nodes.erase(node_id);
 }
 
-void GraphX::addEdge(int srcID, int destID, double edgeLabel, tr1::unordered_map<string, void* >& edgeToFreq)
-{
-	if(CL.length()>0)
-		CL.clear();
+void GraphX::add_edge(int src_id, int dest_id, double edge_label, tr1::unordered_map<string, void *> &edge_to_freq) {
+    if (CL.length() > 0)
+        CL.clear();
 
-	NodeX* srcNode;
-	NodeX* destNode;
+    NodeX *src_node;
+    NodeX *dest_node;
 
-	tr1::unordered_map<int, NodeX*>::iterator iter = nodes.find(srcID);
-	if(iter!=nodes.end())
-		srcNode = iter->second;
-	else
-		return;
+    tr1::unordered_map<int, NodeX *>::iterator iter = nodes.find(src_id);
+    if (iter != nodes.end())
+        src_node = iter->second;
+    else
+        return;
 
-	iter = nodes.find(destID);
-	if(iter!=nodes.end())
-		destNode = iter->second;
-	else
-		return;
+    iter = nodes.find(dest_id);
+    if (iter != nodes.end())
+        dest_node = iter->second;
+    else
+        return;
 
-	this->addEdge(srcNode, destNode, edgeLabel);
+    this->add_edge(src_node, dest_node, edge_label);
 
-	insertIntoEdgeFreq(srcNode, destID, destNode->getLabel(), edgeLabel, edgeToFreq, false);
+    insert_into_edge_freq(src_node, dest_id, dest_node->get_label(), edge_label, edge_to_freq, false);
 
-	if(this->type==0)
-	{
-		insertIntoEdgeFreq(destNode, srcID, srcNode->getLabel(), edgeLabel, edgeToFreq, false);
-	}
+    if (this->type == 0) {
+        insert_into_edge_freq(dest_node, src_id, src_node->get_label(), edge_label, edge_to_freq, false);
+    }
 }
 
 /**
  * Load a graph file that has .lg format
  * return true if loading is done correctly, otherwise false
  */
-bool GraphX::loadFromFile(string fileName, tr1::unordered_map<string, void* >& edgeToFreq)
-{
-	CL.clear();
+bool GraphX::load_from_file(string file_name, tr1::unordered_map<string, void *> &edge_to_freq) {
+    CL.clear();
 
-	cout<<"Loading graph from file: "<<fileName<<endl;
-	ifstream file (fileName.c_str(), ios::in);
-	if(!file)
-	{
-		cout << "While opening a file an error is encountered" << endl;
-		return false;
+    cout << "Loading graph from file: " << file_name << endl;
+    ifstream file(file_name.c_str(), ios::in);
+    if (!file) {
+        cout << "While opening a file an error is encountered" << endl;
+        return false;
     }
 
-	if(!parseData(file, edgeToFreq))
-		return false;
+    if (!parse_data(file, edge_to_freq))
+        return false;
 
-	file.close();
+    file.close();
 
-	return true;
+    return true;
 }
 
 /**
  * load a graph from the given string. string should follow the .lg format
  */
-bool GraphX::loadFromString(string data, tr1::unordered_map<string, void* >& edgeToFreq)
-{
-	CL.clear();
+bool GraphX::load_from_string(string data, tr1::unordered_map<string, void *> &edge_to_freq) {
+    CL.clear();
 
-	istringstream str(data);
+    istringstream str(data);
 
-	bool b = parseData(str, edgeToFreq);
+    bool b = parse_data(str, edge_to_freq);
 
-	//destruct data in the 'edgeToFreq' structure
-	for(tr1::unordered_map<string, void* >::iterator iter = edgeToFreq.begin();iter!=edgeToFreq.end();iter++)
-	{
-		delete ((Pattern*)iter->second);
-	}
-	edgeToFreq.clear();
+    //destruct data in the 'edgeToFreq' structure
+    for (tr1::unordered_map<string, void *>::iterator iter = edge_to_freq.begin(); iter != edge_to_freq.end(); iter++) {
+        delete ((Pattern *) iter->second);
+    }
+    edge_to_freq.clear();
 
-	if(!b)
-		return false;
+    if (!b)
+        return false;
 
-	return true;
+    return true;
 }
 
 /**
  * the graph loader parser
  */
-bool GraphX::parseData(istream& data, tr1::unordered_map<string, void* >& edgeToFreq)
-{
-	//read the first line
-	char temp_ch;
-	data>>temp_ch;data>>temp_ch;data>>temp_ch;
+bool GraphX::parse_data(istream &data, tr1::unordered_map<string, void *> &edge_to_freq) {
+    //read the first line
+    char temp_ch;
+    data >> temp_ch;
+    data >> temp_ch;
+    data >> temp_ch;
 
-	int numEdgesLoaded = 0;
+    int num_edges_loaded = 0;
 
-	bool firstEdgeMet = false;
-	while (!data.eof())
-	{
-		char ch;
-		ch = '\0';
-		data>>ch;
+    bool first_edge_met = false;
+    while (!data.eof()) {
+        char ch;
+        ch = '\0';
+        data >> ch;
 
-		//to add nodes
-		if(ch=='v')
-		{
-			int id;
-			double label;
-			data>>id;
-			data>>label;
+        //to add nodes
+        if (ch == 'v') {
+            int id;
+            double label;
+            data >> id;
+            data >> label;
 
-			this->AddNode(id, label);
-		}
-		else if(ch=='e')//to add edges
-		{
-			if(!firstEdgeMet)
-			{
-				firstEdgeMet = true;
+            this->add_node(id, label);
+        } else if (ch == 'e')//to add edges
+        {
+            if (!first_edge_met) {
+                first_edge_met = true;
 
-				if(freq>-1)
-				{
-					for(tr1::unordered_map<double, set<int>* >::iterator iter = this->nodesByLabel.begin();iter!=nodesByLabel.end();iter++)
-					{
-						if(iter->second->size()<freq)
-						{
-							//如果带某标签的节点在图中出现的次数小于阈值，也就意味着与带有该标签的节点相连的所有边都是不频繁的
-							tr1::unordered_map<double, set<int>* >::iterator iter2 = this->nodesByLabel.find(iter->first);
-							if(iter2==this->nodesByLabel.end())
-							{
-								cout<<"Error: isufnm44"<<endl;
-								exit(0);
-							}
-							//遍历所有带该标签的节点，iter2为其中的节点，忽略此节点与和此节点相连的边
-							set<int>* nodesToRemove = iter2->second;
-							for(set<int>::iterator iter1 = nodesToRemove->begin();iter1!=nodesToRemove->end();)
-							{
-								int nodeID = *iter1;
-								iter1++;
-								this->removeNode_IgnoreEdges(nodeID);
-							}
-						}
-					}
-				}
-			}
+                if (freq > -1) {
+                    for (tr1::unordered_map<double, set<int> *>::iterator iter = this->nodes_by_label.begin();
+                         iter != nodes_by_label.end(); iter++) {
+                        if (iter->second->size() < freq) {
+                            //如果带某标签的节点在图中出现的次数小于阈值，也就意味着与带有该标签的节点相连的所有边都是不频繁的
+                            tr1::unordered_map<double, set<int> *>::iterator iter2 = this->nodes_by_label.find(
+                                    iter->first);
+                            if (iter2 == this->nodes_by_label.end()) {
+                                cout << "Error: isufnm44" << endl;
+                                exit(0);
+                            }
+                            //遍历所有带该标签的节点，iter2为其中的节点，忽略此节点与和此节点相连的边
+                            set<int> *nodes_to_remove = iter2->second;
+                            for (set<int>::iterator iter1 = nodes_to_remove->begin();
+                                 iter1 != nodes_to_remove->end();) {
+                                int nodeID = *iter1;
+                                iter1++;
+                                this->remove_node_ignore_edges(nodeID);
+                            }
+                        }
+                    }
+                }
+            }
 
-			int id1;
-			int id2;
-			double label;
-			data>>id1;
-			data>>id2;
-			data>>label;
-			this->addEdge(id1, id2, label, edgeToFreq);
-			numEdgesLoaded++;
-		}
-	}
+            int id1;
+            int id2;
+            double label;
+            data >> id1;
+            data >> id2;
+            data >> label;
+            this->add_edge(id1, id2, label, edge_to_freq);
+            num_edges_loaded++;
+        }
+    }
 
-	return true;
+    return true;
 }
 
-NodeX* GraphX::getNodeWithID(int nodeID)
-{
-	tr1::unordered_map<int, NodeX*>::iterator iter = nodes.find(nodeID);
-	if(iter==nodes.end())
-		return NULL;
-	else
-		return iter->second;
+NodeX *GraphX::get_node_with_id(int node_id) {
+    tr1::unordered_map<int, NodeX *>::iterator iter = nodes.find(node_id);
+    if (iter == nodes.end())
+        return NULL;
+    else
+        return iter->second;
 }
 
-set<int>* GraphX::getNodesByLabel(double label)
-{
-	tr1::unordered_map<double, set<int>* >::iterator iter = nodesByLabel.find(label);
-	if(iter==nodesByLabel.end())
-		return NULL;
-	return iter->second;
+set<int> *GraphX::get_nodes_by_label(double label) {
+    tr1::unordered_map<double, set<int> *>::iterator iter = nodes_by_label.find(label);
+    if (iter == nodes_by_label.end())
+        return NULL;
+    return iter->second;
 }
 
-tr1::unordered_map<int,NodeX*>::const_iterator GraphX::getNodesIterator()
-{
-	return nodes.begin();
+tr1::unordered_map<int, NodeX *>::const_iterator GraphX::get_nodes_iterator() {
+    return nodes.begin();
 }
 
-tr1::unordered_map<int,NodeX*>::const_iterator GraphX::getNodesEndIterator()
-{
-	return nodes.end();
+tr1::unordered_map<int, NodeX *>::const_iterator GraphX::get_nodes_end_iterator() {
+    return nodes.end();
 }
 
 /**
  * get edge label from the scr node to the destination node
  * if either the src node is not found, or the detination node is not found from the src node, then return 0.0001
  */
-double GraphX::getEdgeLabel(int srcNodeID, int destNodeID)
-{
-	NodeX* srcNode;
-	tr1::unordered_map<int, NodeX* >::iterator temp = nodes.find(srcNodeID);
-	if(temp==nodes.end())
-			return 0.0001;
-	srcNode = (*temp).second;
+double GraphX::get_edge_label(int src_node_id, int dest_node_id) {
+    NodeX *srcNode;
+    tr1::unordered_map<int, NodeX *>::iterator temp = nodes.find(src_node_id);
+    if (temp == nodes.end())
+        return 0.0001;
+    srcNode = (*temp).second;
 
-	EdgeX* edge = (EdgeX*)srcNode->getEdgeForDestNode(destNodeID);
-	if(edge==NULL)
-		return 0.0001;
+    EdgeX *edge = (EdgeX *) srcNode->get_edge_for_dest_node(dest_node_id);
+    if (edge == NULL)
+        return 0.0001;
 
-	return edge->getLabel();
+    return edge->get_label();
 }
 
-int GraphX::getNumOfNodes()
-{
-	return this->nodes.size();
+int GraphX::get_num_of_nodes() {
+    return this->nodes.size();
 }
 
 /**
  * return treu if the graph is connected
  */
-bool GraphX::isConnected()
-{
-	if(nodes.size()<2)
-		return true;
+bool GraphX::is_connected() {
+    if (nodes.size() < 2)
+        return true;
 
-	//start from any node
-	NodeX* node = nodes.begin()->second;
-	map<int,NodeX*> visited;
-	map<int,NodeX*> toVisit;
+    //start from any node
+    NodeX *node = nodes.begin()->second;
+    map<int, NodeX *> visited;
+    map<int, NodeX *> to_visit;
 
-	toVisit.insert(std::pair<int, NodeX*>(node->getID(), node));
-	while(toVisit.size()>0)
-	{
-		//1- pop a node for the to be visited list, 2- remove it from toVisit, and 3- add it to the visited list
-		node = toVisit.begin()->second;//1
-		toVisit.erase(toVisit.begin());//2
-		visited.insert(std::pair<int, NodeX*>(node->getID(), node));//3
-		//add its neighbors
-		for(tr1::unordered_map<int, void*>::iterator iter = node->getEdgesIterator();iter!=node->getEdgesEndIterator();++iter)
-		{
-			int id = iter->first;
-			if(visited.find(id)!=visited.end())
-				continue;
-			EdgeX* edge = (EdgeX*)iter->second;
-			toVisit.insert(std::pair<int, NodeX*>(id, edge->getOtherNode()));
-		}
-	}
+    to_visit.insert(std::pair<int, NodeX *>(node->get_id(), node));
+    while (to_visit.size() > 0) {
+        //1- pop a node for the to be visited list, 2- remove it from to_visit, and 3- add it to the visited list
+        node = to_visit.begin()->second;//1
+        to_visit.erase(to_visit.begin());//2
+        visited.insert(std::pair<int, NodeX *>(node->get_id(), node));//3
+        //add its neighbors
+        for (tr1::unordered_map<int, void *>::iterator iter = node->get_edges_iterator(); iter !=
+                                                                                          node->get_edges_end_iterator(); ++iter) {
+            int id = iter->first;
+            if (visited.find(id) != visited.end())
+                continue;
+            EdgeX *edge = (EdgeX *) iter->second;
+            to_visit.insert(std::pair<int, NodeX *>(id, edge->get_other_node()));
+        }
+    }
 
-	if(visited.size()==nodes.size())
-		return true;
-	else
-		return false;
+    if (visited.size() == nodes.size())
+        return true;
+    else
+        return false;
 
 }
 
 /**
  * return true if the two graphs are the same
  */
-bool GraphX::isTheSameWith(GraphX* otherG)
-{
-	if(this->getNumOfNodes()!=otherG->getNumOfNodes() ||
-			this->getNumOfEdges()!=otherG->getNumOfEdges())
-	{
-		return false;
-	}
+bool GraphX::is_the_same_with(GraphX *other_g) {
+    if (this->get_num_of_nodes() != other_g->get_num_of_nodes() ||
+        this->get_num_of_edges() != other_g->get_num_of_edges()) {
+        return false;
+    }
 
-	//compare using CL
-	string thisCL = this->getCanonicalLabel();
-	string otherCL = otherG->getCanonicalLabel();
-	if(thisCL.compare(otherCL)!=0)
-		return false;
-	else
-	{
-		bool a = false;
-		if(thisCL.at(0)=='X') a = true;
+    //compare using CL
+    string this_cl = this->get_canonical_label();
+    string other_cl = other_g->get_canonical_label();
+    if (this_cl.compare(other_cl) != 0)
+        return false;
+    else {
+        bool a = false;
+        if (this_cl.at(0) == 'X') a = true;
 
-		if(!a)
-			return true;
-	}
+        if (!a)
+            return true;
+    }
 
-	vector<map<int, int>* > result;
-	tr1::unordered_map<int, tr1::unordered_set<int>*> domains_values;
+    vector<map<int, int> *> result;
+    tr1::unordered_map<int, tr1::unordered_set<int> *> domains_values;
 
-	this->isIsomorphic(otherG, result, domains_values, -1, -1, false);
+    this->is_isomorphic(other_g, result, domains_values, -1, -1, false);
 
-	bool b;
+    bool b;
 
-	if(result.size()>0)
-	{
-		b = true;
-	}
-	else
-	{
-		b = false;
-	}
+    if (result.size() > 0) {
+        b = true;
+    } else {
+        b = false;
+    }
 
-	for(vector<map<int, int>* >::iterator iter1 = result.begin();iter1!=result.end();iter1++)
-	{
-		delete (*iter1);
-	}
-	result.clear();
+    for (vector<map<int, int> *>::iterator iter1 = result.begin(); iter1 != result.end(); iter1++) {
+        delete (*iter1);
+    }
+    result.clear();
 
-	return b;
+    return b;
 }
 
 /**
@@ -582,408 +531,372 @@ bool GraphX::isTheSameWith(GraphX* otherG)
  * 'this' is the query graph, while graph i the data graph, this means I can query this (smaller) in the data (Bigger)
  *  [*] this function does not consider edge label! FIX IT!!!!
  */
-void GraphX::isIsomorphic(GraphX* graph, vector<map<int, int>* >& results, tr1::unordered_map<int, tr1::unordered_set<int>*>& domains_values, int restrictedDomainID, int restrictedNodeID, bool pruneByDomainValues, tr1::unordered_map<int, tr1::unordered_set<int>* >* postponedNodes, unsigned long maxIters)
-{
-	//a variable for counting
-	numIterations = 0;
+void GraphX::is_isomorphic(GraphX *graph, vector<map<int, int> *> &results,
+                           tr1::unordered_map<int, tr1::unordered_set<int> *> &domains_values, int restricted_domain_id,
+                           int restricted_node_id, bool prune_by_domain_values,
+                           tr1::unordered_map<int, tr1::unordered_set<int> *> *postponed_nodes,
+                           unsigned long max_iters) {
+    //a variable for counting
+    num_iterations = 0;
 
-	//populate the order in which query graph will be traversed
-	tr1::unordered_set<int> checked;
-	int nodesOrder[getNumOfNodes()];//the result of this part
+    //populate the order in which query graph will be traversed
+    tr1::unordered_set<int> checked;
+    int nodes_order[get_num_of_nodes()];//the result of this part
 
-	//get the nodes order
-	vector<int> toCheck;
+    //get the nodes order
+    vector<int> to_check;
 
-	//check for the restricted node, if it exists let it be the first to check
-	if(restrictedDomainID==-1)
-		toCheck.push_back(nodes.begin()->second->getID());
-	else
-		toCheck.push_back(restrictedDomainID);
+    //check for the restricted node, if it exists let it be the first to check
+    if (restricted_domain_id == -1)
+        to_check.push_back(nodes.begin()->second->get_id());
+    else
+        to_check.push_back(restricted_domain_id);
 
-	int count = 0;
-	while(toCheck.size()>0)
-	{
-		int current = toCheck.front();
-		toCheck.erase(toCheck.begin());
-		if(checked.find(current)!=checked.end())
-			continue;
-		nodesOrder[count] = current;
-		checked.insert(current);
-		count++;
-		NodeX* currNode = nodes[current];
+    int count = 0;
+    while (to_check.size() > 0) {
+        int current = to_check.front();
+        to_check.erase(to_check.begin());
+        if (checked.find(current) != checked.end())
+            continue;
+        nodes_order[count] = current;
+        checked.insert(current);
+        count++;
+        NodeX *curr_node = nodes[current];
 
-		int start = toCheck.size();
-		// 将currNode的邻接结点依次放入toCheck列表
-		for(tr1::unordered_map<int, void*>::iterator iter = currNode->getEdgesIterator();iter!=currNode->getEdgesEndIterator();++iter)
-		{
-			int otherID = iter->first;
-			if(checked.find(otherID)==checked.end())
-			{
-				//put them in order based on the degree
-				vector<int>::iterator iter1 = toCheck.begin();
-				for(int i=0;i<start;i++)
-					iter1++;
-				for(;iter1!=toCheck.end();++iter1)
-				{
-					// 按度递增的顺序排序
-					if(nodes[otherID]->getEdgesSize()<nodes[(*iter1)]->getEdgesSize())
-						break;
-				}
-				toCheck.insert(iter1, otherID);
-			}
-		}
-	}
+        int start = to_check.size();
+        // 将currNode的邻接结点依次放入toCheck列表
+        for (tr1::unordered_map<int, void *>::iterator iter = curr_node->get_edges_iterator(); iter !=
+                                                                                               curr_node->get_edges_end_iterator(); ++iter) {
+            int other_id = iter->first;
+            if (checked.find(other_id) == checked.end()) {
+                //put them in order based on the degree
+                vector<int>::iterator iter1 = to_check.begin();
+                for (int i = 0; i < start; i++)
+                    iter1++;
+                for (; iter1 != to_check.end(); ++iter1) {
+                    // 按度递增的顺序排序
+                    if (nodes[other_id]->get_edges_size() < nodes[(*iter1)]->get_edges_size())
+                        break;
+                }
+                to_check.insert(iter1, other_id);
+            }
+        }
+    }
 
-	vector<Set_Iterator* > selected;
-	tr1::unordered_set<int> selectedDataMap;//only for fast check for existence
-	tr1::unordered_map<int, int> selectedQueryMap;//map value is query node id, value is its order
-	//add it to the selected list
-	Set_Iterator* isi = new Set_Iterator();
+    vector<Set_Iterator *> selected;
+    tr1::unordered_set<int> selected_data_map;//only for fast check for existence
+    tr1::unordered_map<int, int> selected_query_map;//map value is query node id, value is its order
+    //add it to the selected list
+    Set_Iterator *isi = new Set_Iterator();
 
-	//if the restricted node ID exists, then limit its domain to the restricted node
-	if(restrictedDomainID==-1)
-	{
-		// 获取大图上，与子图中nodesOrder[0]结点对应的label一致的结点
-		isi->se = graph->getNodesByLabel(this->getNodeWithID(nodesOrder[0])->getLabel());
-		if(isi->se==NULL)
-		{
-			delete isi;
-			return;
-		}
-	}
-	else
-	{
-		isi->se = new set<int>();
-		// insert the restrictedNodeID first
-		isi->se->insert(restrictedNodeID);
-	}
-	isi->it = isi->se->begin();
-	selected.push_back(isi);
-	// save all the selected candidates into the set: selectedDataMap中
-	selectedDataMap.insert(*(isi->it));
-	// 结点编号->选中的次序
-	selectedQueryMap.insert(std::pair<int, int>(nodesOrder[selected.size()-1], selected.size()-1));
+    //if the restricted node ID exists, then limit its domain to the restricted node
+    if (restricted_domain_id == -1) {
+        // 获取大图上，与子图中nodesOrder[0]结点对应的label一致的结点
+        isi->se = graph->get_nodes_by_label(this->get_node_with_id(nodes_order[0])->get_label());
+        if (isi->se == NULL) {
+            delete isi;
+            return;
+        }
+    } else {
+        isi->se = new set<int>();
+        // insert the restricted_node_id first
+        isi->se->insert(restricted_node_id);
+    }
+    isi->it = isi->se->begin();
+    selected.push_back(isi);
+    // save all the selected candidates into the set: selectedDataMap中
+    selected_data_map.insert(*(isi->it));
+    // 结点编号->选中的次序
+    selected_query_map.insert(std::pair<int, int>(nodes_order[selected.size() - 1], selected.size() - 1));
 
-	while(true)
-	{
-		numIterations++;
-		// postponedNodes为域到域中结点集合的映射
-		if(postponedNodes!=0)
-		{
-			if(numIterations>maxIters)
-			{
-				tr1::unordered_map<int, tr1::unordered_set<int>* >::iterator iter = postponedNodes->find(restrictedDomainID);
-				tr1::unordered_set<int>* nodesList;
+    while (true) {
+        num_iterations++;
+        // postponedNodes为域到域中结点集合的映射
+        if (postponed_nodes != 0) {
+            if (num_iterations > max_iters) {
+                tr1::unordered_map<int, tr1::unordered_set<int> *>::iterator iter = postponed_nodes->find(
+                        restricted_domain_id);
+                tr1::unordered_set<int> *nodes_list;
 
-				// postponedNodes中不存在序号为restrictedDomainID的域，创建新的集合nodesList并插入
-				if(iter==postponedNodes->end())
-				{
-					nodesList = new tr1::unordered_set<int>();
-					postponedNodes->insert(std::pair<int, tr1::unordered_set<int>* >(restrictedDomainID, nodesList));
-				}
-				// 否则令集合nodesList为postponedNodes中restrictedDomainID域对应的结点集合
-				else
-				{
-					nodesList = iter->second;
-				}
-				nodesList->insert(restrictedNodeID);
+                // postponedNodes中不存在序号为restrictedDomainID的域，创建新的集合nodesList并插入
+                if (iter == postponed_nodes->end()) {
+                    nodes_list = new tr1::unordered_set<int>();
+                    postponed_nodes->insert(
+                            std::pair<int, tr1::unordered_set<int> *>(restricted_domain_id, nodes_list));
+                }
+                    // 否则令集合nodesList为postponedNodes中restrictedDomainID域对应的结点集合
+                else {
+                    nodes_list = iter->second;
+                }
+                nodes_list->insert(restricted_node_id);
 
-				if(Settings::debugMSG)
-				{
-					cout<<"isIsomorphic function exceeded the allowed processing limit! NodeID: "<<restrictedNodeID<<", DomainID: "<<restrictedDomainID<<endl;
-					cout<<"maxIters = "<<maxIters<<", numIterations = "<<numIterations<<endl;
-				}
+                if (Settings::debug_msg) {
+                    cout << "is_isomorphic function exceeded the allowed processing limit! NodeID: "
+                         << restricted_node_id << ", DomainID: " << restricted_domain_id << endl;
+                    cout << "max_iters = " << max_iters << ", num_iterations = " << num_iterations << endl;
+                }
 
-				{
-					vector<Set_Iterator* >::iterator iter = selected.begin();
-					if(iter!=selected.end())
-					{
-						if(restrictedDomainID!=-1)
-							delete (*iter)->se;
-						delete (*iter);
-						iter++;
-						for(;iter!=selected.end();iter++)
-						{
-							(*iter)->se->clear();
-							delete (*iter)->se;
-							delete (*iter);
-						}
-					}
-				}
+                {
+                    vector<Set_Iterator *>::iterator iter = selected.begin();
+                    if (iter != selected.end()) {
+                        if (restricted_domain_id != -1)
+                            delete (*iter)->se;
+                        delete (*iter);
+                        iter++;
+                        for (; iter != selected.end(); iter++) {
+                            (*iter)->se->clear();
+                            delete (*iter)->se;
+                            delete (*iter);
+                        }
+                    }
+                }
 
-				return;
-			}
-		}
+                return;
+            }
+        }
 
-		//take care of the counting part
-		Set_Iterator* currentISI = selected.back();//.at(selected.size()-1);
+        //take care of the counting part
+        Set_Iterator *current_isi = selected.back();//.at(selected.size()-1);
 
-		while(currentISI->isIterEnd())
-		{
-			numIterations++;
+        while (current_isi->is_iter_end()) {
+            num_iterations++;
 
-			//if we finished the domain of the first node
-			if(selected.size()==1)
-			{
-				if(restrictedDomainID!=-1)
-				{
-					delete (*(selected.begin()))->se;
-				}
-				delete (*(selected.begin()));
-				selected.clear();
-				return;
-			}
+            //if we finished the domain of the first node
+            if (selected.size() == 1) {
+                if (restricted_domain_id != -1) {
+                    delete (*(selected.begin()))->se;
+                }
+                delete (*(selected.begin()));
+                selected.clear();
+                return;
+            }
 
-			//clear the data node associated with the last selected
-			//selectedDataMap.erase(*(selected.back()->it));//commented on 27/10/2015
-			//remove the last selected
-			Set_Iterator* tempToDel = selected.back();
-			selected.pop_back();
-			delete tempToDel->se;
-			delete tempToDel;
-			//delete the query node associated with the last selected
-			selectedQueryMap.erase(nodesOrder[selected.size()]);
+            //clear the data node associated with the last selected
+            //selected_data_map.erase(*(selected.back()->it));//commented on 27/10/2015
+            //remove the last selected
+            Set_Iterator *temp_to_del = selected.back();
+            selected.pop_back();
+            delete temp_to_del->se;
+            delete temp_to_del;
+            //delete the query node associated with the last selected
+            selected_query_map.erase(nodes_order[selected.size()]);
 
-			currentISI = selected.back();//.at(selected.size()-1);
+            current_isi = selected.back();//.at(selected.size()-1);
 
-			selectedDataMap.erase(*(currentISI->it));
-			currentISI->it++;
-			if(!currentISI->isIterEnd())//only the if line is added on 27/10/2015
-				selectedDataMap.insert(*(currentISI->it));
-		}
-		//check current status
-		NodeX* queryGraphNode = getNodeWithID(nodesOrder[selected.size()-1]);
-		numIterations+=queryGraphNode->getEdgesSize();
+            selected_data_map.erase(*(current_isi->it));
+            current_isi->it++;
+            if (!current_isi->is_iter_end())//only the if line is added on 27/10/2015
+                selected_data_map.insert(*(current_isi->it));
+        }
+        //check current status
+        NodeX *query_graph_node = get_node_with_id(nodes_order[selected.size() - 1]);
+        num_iterations += query_graph_node->get_edges_size();
 
-		bool b = checkCurrentStatus(this, graph, selected, nodesOrder, selectedQueryMap);
-		//if valid
-		if(b)
-		{
-			//I found a solution
-			if(selected.size()==this->getNumOfNodes())
-			{
-				map<int, int>* m = new map<int,int>();
-				int c = 0;
-				for(vector<Set_Iterator* >::iterator i = selected.begin();i!=selected.end();++i,c++)
-				{
-					m->insert(std::pair<int, int>(nodesOrder[c], *((*i)->it)));
-				}
-				results.push_back(m);
+        bool b = check_current_status(this, graph, selected, nodes_order, selected_query_map);
+        //if valid
+        if (b) {
+            //I found a solution
+            if (selected.size() == this->get_num_of_nodes()) {
+                map<int, int> *m = new map<int, int>();
+                int c = 0;
+                for (vector<Set_Iterator *>::iterator i = selected.begin(); i != selected.end(); ++i, c++) {
+                    m->insert(std::pair<int, int>(nodes_order[c], *((*i)->it)));
+                }
+                results.push_back(m);
 
-				if(restrictedDomainID!=-1)
-				{
-					//delete elements in selected
-					for(vector<Set_Iterator* >::iterator iter = selected.begin();iter!=selected.end();iter++)
-					{
-						(*iter)->se->clear();
-						delete (*iter)->se;
-						delete (*iter);
-					}
-					return;
-				}
+                if (restricted_domain_id != -1) {
+                    //delete elements in selected
+                    for (vector<Set_Iterator *>::iterator iter = selected.begin(); iter != selected.end(); iter++) {
+                        (*iter)->se->clear();
+                        delete (*iter)->se;
+                        delete (*iter);
+                    }
+                    return;
+                }
 
-				selectedDataMap.erase(*(selected.back()->it));
-				selected.back()->it++;
-				if(!selected.back()->isIterEnd())
-					selectedDataMap.insert(*(selected.back()->it));
-			}
-			else//no solution found yet!
-			{
-				Set_Iterator* si = new Set_Iterator();
-				si->se = new set<int>();
-				//get extension from current selected (last si)
-				//get the index of a query node connected to the query node to be selected for the check
-				NodeX* temp = NULL;
-				// tempN1为当前子图上的节点
-				NodeX* tempN1 = this->getNodeWithID(nodesOrder[selected.size()]);
-				vector<Set_Iterator* >::iterator tempIT = selected.begin();
-				for(int i=0;i<selected.size();i++, tempIT++)
-				{
-					// 找到子图上与tempN1相连的节点，找到该点对应在大图上的对应域的结点temp
-					if(tempN1->isItConnectedWithNodeID(nodesOrder[i]))
-					{
-						temp = graph->getNodeWithID((*(*tempIT)->it));
-						break;
-					}
-				}
-				for(tr1::unordered_map<int, void*>::iterator iter = temp->getEdgesIterator();iter!=temp->getEdgesEndIterator();++iter)
-				{
-					numIterations++;
+                selected_data_map.erase(*(selected.back()->it));
+                selected.back()->it++;
+                if (!selected.back()->is_iter_end())
+                    selected_data_map.insert(*(selected.back()->it));
+            } else//no solution found yet!
+            {
+                Set_Iterator *si = new Set_Iterator();
+                si->se = new set<int>();
+                //get extension from current selected (last si)
+                //get the index of a query node connected to the query node to be selected for the check
+                NodeX *temp = NULL;
+                // tempN1为当前子图上的节点
+                NodeX *temp_n1 = this->get_node_with_id(nodes_order[selected.size()]);
+                vector<Set_Iterator *>::iterator temp_it = selected.begin();
+                for (int i = 0; i < selected.size(); i++, temp_it++) {
+                    // 找到子图上与tempN1相连的节点，找到该点对应在大图上的对应域的结点temp
+                    if (temp_n1->is_it_connected_with_node_id(nodes_order[i])) {
+                        temp = graph->get_node_with_id((*(*temp_it)->it));
+                        break;
+                    }
+                }
+                for (tr1::unordered_map<int, void *>::iterator iter = temp->get_edges_iterator(); iter !=
+                                                                                                  temp->get_edges_end_iterator(); ++iter) {
+                    num_iterations++;
 
-					if(numIterations>maxIters)
-						break;
+                    if (num_iterations > max_iters)
+                        break;
 
-					// 遍历temp的邻接结点otherNode
-					int otherNodeID = iter->first;
+                    // 遍历temp的邻接结点otherNode
+                    int other_node_id = iter->first;
 
-					NodeX* otherNode = graph->getNodeWithID(otherNodeID);
+                    NodeX *other_node = graph->get_node_with_id(other_node_id);
 
-					//check for the AC_3ed domain, to check for node occurrence, if not then no need to check it
-					if(pruneByDomainValues && domains_values.size()>0)
-					{
-						tr1::unordered_set<int>* tempD = domains_values[nodesOrder[selected.size()]];
-						// 只有otherNode在tempN1的域(即domains_values[nodesOrder[selected.size()]])中才继续
-						if(tempD->find(otherNodeID)==tempD->end())
-						{
-							continue;
-						}
-					}
+                    //check for the AC_3ed domain, to check for node occurrence, if not then no need to check it
+                    if (prune_by_domain_values && domains_values.size() > 0) {
+                        tr1::unordered_set<int> *temp_d = domains_values[nodes_order[selected.size()]];
+                        // 只有otherNode在tempN1的域(即domains_values[nodes_order[selected.size()]])中才继续
+                        if (temp_d->find(other_node_id) == temp_d->end()) {
+                            continue;
+                        }
+                    }
 
-					// 只有otherNode与tempN1的label相等才继续
-					//check for node label
-					if(otherNode->getLabel()!=tempN1->getLabel())
-					{
-						continue;
-					}
+                    // 只有otherNode与tempN1的label相等才继续
+                    //check for node label
+                    if (other_node->get_label() != temp_n1->get_label()) {
+                        continue;
+                    }
 
-					if(selectedDataMap.find(otherNodeID)==selectedDataMap.end())
-					{
-						// 如果otherNode仍未被选中
-						bool b = true;
-						//check for other edges
-						// tempNi与其他结点相连，检查对应的大图上的结点otherNode与相应的结点是否也相连
-						for(tr1::unordered_map<int, void*>::iterator iter1 = tempN1->getEdgesIterator();iter1!=tempN1->getEdgesEndIterator();++iter1)
-						{
-							numIterations++;
+                    if (selected_data_map.find(other_node_id) == selected_data_map.end()) {
+                        // 如果otherNode仍未被选中
+                        bool b = true;
+                        //check for other edges
+                        // tempNi与其他结点相连，检查对应的大图上的结点otherNode与相应的结点是否也相连
+                        for (tr1::unordered_map<int, void *>::iterator iter1 = temp_n1->get_edges_iterator(); iter1 !=
+                                                                                                              temp_n1->get_edges_end_iterator(); ++iter1) {
+                            num_iterations++;
 
-							if(numIterations>maxIters)
-								break;
+                            if (num_iterations > max_iters)
+                                break;
 
-							EdgeX* edge = (EdgeX*)iter1->second;
-							tr1::unordered_map<int, int>::iterator itr = selectedQueryMap.find(edge->getOtherNode()->getID());
-							if(itr == selectedQueryMap.end())
-							{
-								continue;
-							}
-							int tempOrder = itr->second;
-							double edgeLabel = edge->getLabel();
-							// 检查otherNode是否与相应的结点以edgeLabel标签的边相连
-							if(!otherNode->isItConnectedWithNodeID((*(selected[tempOrder]->it)), edgeLabel))
-							{
-								b = false;
-								break;
-							}
-						}
+                            EdgeX *edge = (EdgeX *) iter1->second;
+                            tr1::unordered_map<int, int>::iterator itr = selected_query_map.find(
+                                    edge->get_other_node()->get_id());
+                            if (itr == selected_query_map.end()) {
+                                continue;
+                            }
+                            int temp_order = itr->second;
+                            double edge_label = edge->get_label();
+                            // 检查otherNode是否与相应的结点以edgeLabel标签的边相连
+                            if (!other_node->is_it_connected_with_node_id((*(selected[temp_order]->it)), edge_label)) {
+                                b = false;
+                                break;
+                            }
+                        }
 
-						if(b)
-						{
-							si->se->insert(otherNodeID);
-						}
-					}
-					else
-					{
-					}
-				}
+                        if (b) {
+                            si->se->insert(other_node_id);
+                        }
+                    } else {
+                    }
+                }
 
-				//I discovered a bug when testing the efficient graph, this fix should work now, otherwise the old code is below
-				if(si->se->size()>0)
-				{
-					si->it = si->se->begin();
-					selected.push_back(si);
-					selectedDataMap.insert(*(si->it));
-					selectedQueryMap.insert(std::pair<int, int>(nodesOrder[selected.size()-1], selected.size()-1));
-				}
-				else
-				{
-					si->it = si->se->end();
-					delete si->se;
-					delete si;
-					//
-					selectedDataMap.erase(*(selected.back()->it));
-					selected.back()->it++;
-					if(!selected.back()->isIterEnd())
-						selectedDataMap.insert(*(selected.back()->it));
-				}
-			}
-		}
-		else
-		{
-			selectedDataMap.erase(*(selected.back()->it));
-			selected.back()->it++;
-			if(!selected.back()->isIterEnd())
-				selectedDataMap.insert(*(selected.back()->it));
-		}
-	}
+                //I discovered a bug when testing the efficient graph, this fix should work now, otherwise the old code is below
+                if (si->se->size() > 0) {
+                    si->it = si->se->begin();
+                    selected.push_back(si);
+                    selected_data_map.insert(*(si->it));
+                    selected_query_map.insert(
+                            std::pair<int, int>(nodes_order[selected.size() - 1], selected.size() - 1));
+                } else {
+                    si->it = si->se->end();
+                    delete si->se;
+                    delete si;
+                    //
+                    selected_data_map.erase(*(selected.back()->it));
+                    selected.back()->it++;
+                    if (!selected.back()->is_iter_end())
+                        selected_data_map.insert(*(selected.back()->it));
+                }
+            }
+        } else {
+            selected_data_map.erase(*(selected.back()->it));
+            selected.back()->it++;
+            if (!selected.back()->is_iter_end())
+                selected_data_map.insert(*(selected.back()->it));
+        }
+    }
 
-	//delete elements in selected
-	vector<Set_Iterator* >::iterator iter = selected.begin();
-	if(iter!=selected.end())
-	{
-		if(restrictedDomainID!=-1)
-			delete (*iter)->se;
-		delete (*iter);
-		iter++;
-		for(;iter!=selected.end();iter++)
-		{
-			(*iter)->se->clear();
-			delete (*iter)->se;
-			delete (*iter);
-		}
-	}
-	selected.clear();
+    //delete elements in selected
+    vector<Set_Iterator *>::iterator iter = selected.begin();
+    if (iter != selected.end()) {
+        if (restricted_domain_id != -1)
+            delete (*iter)->se;
+        delete (*iter);
+        iter++;
+        for (; iter != selected.end(); iter++) {
+            (*iter)->se->clear();
+            delete (*iter)->se;
+            delete (*iter);
+        }
+    }
+    selected.clear();
 }
 
 /**
  * get the canonical label of this graph
  */
-string GraphX::getCanonicalLabel()
-{
-	if(CL.length()>0)
-	{
-		return CL;
-	}
+string GraphX::get_canonical_label() {
+    if (CL.length() > 0) {
+        return CL;
+    }
 
-	CL = CanonicalLabel::generate(this);
+    CL = CanonicalLabel::generate(this);
 
-	return CL;
+    return CL;
 }
 
-ostream& operator<<(ostream& os, const GraphX& g)
-{
-	os<<"# t 1\n";
-	//output the nodes
-	for(tr1::unordered_map<int,NodeX*>::const_iterator ii=g.nodes.begin(); ii!=g.nodes.end(); ++ii)
-	{
-		NodeX* node = ii->second;
-		os<<"v "<<node->getID()<<" "<<node->getLabel()<<"\n";
-	}
+ostream &operator<<(ostream &os, const GraphX &g) {
+    os << "# t 1\n";
+    //output the nodes
+    for (tr1::unordered_map<int, NodeX *>::const_iterator ii = g.nodes.begin(); ii != g.nodes.end(); ++ii) {
+        NodeX *node = ii->second;
+        os << "v " << node->get_id() << " " << node->get_label() << "\n";
+    }
 
-	//output the edges
-	tr1::unordered_set<string> savedEdges;//list to keep track of already saved edges
-	for(tr1::unordered_map<int,NodeX*>::const_iterator ii=g.nodes.begin(); ii!=g.nodes.end(); ++ii)
-	{
-		NodeX* node = ii->second;
-		for(tr1::unordered_map<int, void*>::iterator iter1 = node->getEdgesIterator();iter1!=node->getEdgesEndIterator();iter1++)
-		{
-			EdgeX* edge = (EdgeX*)iter1->second;
+    //output the edges
+    tr1::unordered_set<string> saved_edges;//list to keep track of already saved edges
+    for (tr1::unordered_map<int, NodeX *>::const_iterator ii = g.nodes.begin(); ii != g.nodes.end(); ++ii) {
+        NodeX *node = ii->second;
+        for (tr1::unordered_map<int, void *>::iterator iter1 = node->get_edges_iterator(); iter1 !=
+                                                                                           node->get_edges_end_iterator(); iter1++) {
+            EdgeX *edge = (EdgeX *) iter1->second;
 
-			//check whether it has been added before or not
-			string sig = intToString(node->getID())+"_"+doubleToString(edge->getLabel())+"_"+intToString(edge->getOtherNode()->getID());
-			if(node->getID()<edge->getOtherNode()->getID())
-				sig = intToString(edge->getOtherNode()->getID())+"_"+doubleToString(edge->getLabel())+"_"+intToString(node->getID());
-			if(savedEdges.find(sig)==savedEdges.end())
-			{
-				savedEdges.insert(sig);
-				os<<"e "<<node->getID()<<" "<<edge->getOtherNode()->getID()<<" "<< setprecision(10) << edge->getLabel()<<"\n";
-			}
-		}
-	}
+            //check whether it has been added before or not
+            string sig =
+                    int_to_string(node->get_id()) + "_" + double_to_string(edge->get_label()) + "_" + int_to_string(
+                            edge->get_other_node()->get_id());
+            if (node->get_id() < edge->get_other_node()->get_id())
+                sig = int_to_string(edge->get_other_node()->get_id()) + "_" + double_to_string(edge->get_label()) +
+                      "_" +
+                      int_to_string(
+                              node->get_id());
+            if (saved_edges.find(sig) == saved_edges.end()) {
+                saved_edges.insert(sig);
+                os << "e " << node->get_id() << " " << edge->get_other_node()->get_id() << " " << setprecision(10)
+                   << edge->get_label() << "\n";
+            }
+        }
+    }
 
     return os;
 }
 
 //Destructor
-GraphX::~GraphX()
-{
-	for(tr1::unordered_map<int,NodeX*>::iterator ii=nodes.begin(); ii!=nodes.end(); ++ii)
-	{
-		delete ii->second;
-	}
-	nodes.clear();
+GraphX::~GraphX() {
+    for (tr1::unordered_map<int, NodeX *>::iterator ii = nodes.begin(); ii != nodes.end(); ++ii) {
+        delete ii->second;
+    }
+    nodes.clear();
 
-	for( tr1::unordered_map<double, set<int>* >::iterator ii=nodesByLabel.begin(); ii!=nodesByLabel.end(); ++ii)
-	{
-		delete ii->second;
-	}
-	nodesByLabel.clear();
+    for (tr1::unordered_map<double, set<int> *>::iterator ii = nodes_by_label.begin();
+         ii != nodes_by_label.end(); ++ii) {
+        delete ii->second;
+    }
+    nodes_by_label.clear();
 }

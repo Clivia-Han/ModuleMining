@@ -11,41 +11,53 @@
 
 using namespace std;
 
-class CLMap_Iterator
-{
+class CLMap_Iterator {
 public:
-	string key;
-	Pattern* pattern;
-	map<string, Pattern*>::iterator mapPIter;
-	map<string, list<Pattern*>* >::iterator mapVIter;
-	list<Pattern* >::iterator vectIter;
-	CLMap_Iterator getCopy();
+    string key;
+    Pattern *pattern;
+    map<string, Pattern *>::iterator map_p_iter;
+    map<string, list<Pattern *> *>::iterator map_v_iter;
+    list<Pattern *>::iterator vect_iter;
+
+    CLMap_Iterator get_copy();
 };
 
-class CLMap
-{
+class CLMap {
 private:
-	map<string, Pattern*> patterns_sig;
-	map<string, list<Pattern* >* > patterns_nosig;
-	Pattern* exists(Pattern*, list<Pattern*>* );
-	bool remove(Pattern*, list<Pattern*>* );
-	bool theSame(Pattern*, Pattern* );
-	int size;
+    map<string, Pattern *> patterns_sig;
+    map<string, list<Pattern *> *> patterns_nosig;
+
+    Pattern *exists(Pattern *, list<Pattern *> *);
+
+    bool remove(Pattern *, list<Pattern *> *);
+
+    bool the_same(Pattern *, Pattern *);
+
+    int size;
 
 public:
-	CLMap();
-	bool addPattern(Pattern* pattern);
-	void removePattern(Pattern* pattern);
-	void addAll(CLMap* clmap);
-	Pattern* getPattern(Pattern* pattern);
-	int getSize() { return size; }
-	void print(int counter = 1);
-	CLMap_Iterator getFirstElement();
-	void advanceIterator(CLMap_Iterator& );
-	void clear();
-	void deleteObjects();
-};
+    CLMap();
 
+    bool add_pattern(Pattern *pattern);
+
+    void remove_pattern(Pattern *pattern);
+
+    void add_all(CLMap *clmap);
+
+    Pattern *get_pattern(Pattern *pattern);
+
+    int get_size() { return size; }
+
+    void print(int counter = 1);
+
+    CLMap_Iterator get_first_element();
+
+    void advance_iterator(CLMap_Iterator &current_iter);
+
+    void clear();
+
+    void delete_objects();
+};
 
 
 #endif /* CLMAP_H_ */

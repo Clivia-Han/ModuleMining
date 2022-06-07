@@ -24,8 +24,6 @@ add_executable(ModuleMining
         src/NodeX.h
         src/Pattern.cpp
         src/Pattern.h
-        src/QueueSimulator.cpp
-        src/QueueSimulator.h
         src/Settings.h
         src/utils.cpp
         src/utils.h

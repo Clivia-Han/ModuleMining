@@ -13,30 +13,23 @@
 #include"EdgeX.h"
 #include"Settings.h"
 
-long CanonicalLabel::elapsed1 = 0;
-long CanonicalLabel::elapsed2 = 0;
-char CanonicalLabel::sigBuffer[10000];
+char CanonicalLabel::sig_buffer[10000];
 
-int mysprintf(char* str, int x)
-{
-	int i;
+int mysprintf(char *str, int x) {
+    int i;
     int magnitude = 0;
-	if(x<10)
-	{
+    if (x < 10) {
         // change the int 'x' to char, and put in str
-		*str = x + '0';
+        *str = x + '0';
         // move the pointer str to the next space
-		return 1;
-	}
-	else if(x<100)
-	{
+        return 1;
+    } else if (x < 100) {
         // Convert x to two-digit character form, and put in str
-		*(str+1) = (x%10) + '0';
-		*(str) = (x/10) + '0';
+        *(str + 1) = (x % 10) + '0';
+        *(str) = (x / 10) + '0';
         // Move the pointer back two paces
-		return 2;
-	}
-    else {
+        return 2;
+    } else {
         int tmp = x;
         while (tmp > 0) {
             tmp /= 10;
@@ -52,129 +45,61 @@ int mysprintf(char* str, int x)
 //		exit(0);
 //	}
 
-	while(x > 0)
-	{
-		*(str+i) = (x % 10) + '0';
-		x = x / 10;
-		i = i - 1;
-	}
+    while (x > 0) {
+        *(str + i) = (x % 10) + '0';
+        x = x / 10;
+        i = i - 1;
+    }
 
-	return magnitude;
+    return magnitude;
 }
 
-void printCombinations(vector<vector<NodeWithInfo* >* >* all)
-{
-	for(vector<vector<NodeWithInfo* >* >::iterator enum1 = all->begin();enum1!=all->end();++enum1)
-	{
-		vector<NodeWithInfo* >* combination = *enum1;
-		for(vector<NodeWithInfo* >::iterator enum11 = combination->begin();enum11!=combination->end();++enum11)
-		{
-			NodeWithInfo* nInfo = *enum11;
-			cout<<nInfo->node->getID()<<", ";
-		}
-		cout<<endl;
-	}
+void print_combinations(vector<vector<NodeWithInfo *> *> *all) {
+    for (vector<vector<NodeWithInfo *> *>::iterator enum1 = all->begin(); enum1 != all->end(); ++enum1) {
+        vector<NodeWithInfo *> *combination = *enum1;
+        for (vector<NodeWithInfo *>::iterator enum11 = combination->begin(); enum11 != combination->end(); ++enum11) {
+            NodeWithInfo *n_info = *enum11;
+            cout << n_info->node->get_id() << ", ";
+        }
+        cout << endl;
+    }
 }
 
-/**
- * just for testing correctness
- */
-bool CL_tester()
-{
-	tr1::unordered_map<string, void* > temp;
 
-	cout<<"Canonical Label test started ..."<<endl;
+string CL_Partition::get_prefix() {
+    string prefix;
+    for (vector<NodeWithInfo *>::iterator iter = nodes.begin(); iter != nodes.end(); iter++) {
+        prefix.append(double_to_string((*iter)->node->get_label()));
+        prefix.append("\0");
+    }
 
-	string g1 = "# t 1\nv 0 1\nv 1 1\nv 2 2\nv 3 2\nv 4 2\ne 1 2 2\ne 0 3 2\ne 3 4 1\ne 4 0 2";
-	string g2 = "# t 1\nv 0 1\nv 2 2\nv 3 2\nv 4 2\ne 0 3 2\ne 3 4 1\ne 4 0 2";
-	GraphX graph11;
-	graph11.loadFromString(g1, temp);
-	string CL11 = CanonicalLabel::generate(&graph11);
-	GraphX graph22;
-	graph22.loadFromString(g2, temp);
-	string CL22 = CanonicalLabel::generate(&graph22);
-	if(CL11.compare(CL22)==0)
-		return false;
-
-	//if(true) return true;
-
-	//the following two should produce the same CL
-	GraphX graph1_1;
-	string str1 = "# t 1\nv 0 2\nv 1 1\nv 2 1\nv 3 2\ne 0 2 2\ne 0 3 2\ne 1 3 1\ne 1 2 1";
-	graph1_1.loadFromString(str1, temp);
-	string CL1_1 = CanonicalLabel::generate(&graph1_1);
-
-	GraphX graph1_2;
-	string str2 = "# t 1\nv 3 2\nv 1 1\nv 2 1\nv 0 2\ne 3 2 2\ne 3 0 2\ne 1 0 1\ne 1 2 1";
-	graph1_2.loadFromString(str2, temp);
-	string CL1_2 = CanonicalLabel::generate(&graph1_2);
-
-	if(CL1_1.compare(CL1_2)!=0)
-	{
-		cout<<"Different!"<<endl<<CL1_1<<endl<<CL1_2<<endl;
-		return false;
-	}
-
-	//the following two should produce the same CL
-	GraphX graph1_3;
-	string str3 = "# t 1\nv 0 1\nv 1 1\nv 2 1\nv 3 1\nv 4 1\nv 5 1\nv 6 1\nv 7 1\ne 0 1 1\ne 0 7 1\ne 0 6 1\ne 1 5 1\ne 1 2 1\ne 2 4 1\ne 2 3 1";
-	graph1_3.loadFromString(str3, temp);
-	string CL1_3 = CanonicalLabel::generate(&graph1_3);
-
-	GraphX graph1_4;
-	string str4 = "# t 1\nv 1 1\nv 0 1\nv 7 1\nv 4 1\nv 3 1\nv 5 1\nv 6 1\nv 2 1\ne 1 0 1\ne 1 2 1\ne 1 6 1\ne 0 5 1\ne 0 7 1\ne 7 3 1\ne 7 4 1";
-	graph1_4.loadFromString(str4, temp);
-	string CL1_4 = CanonicalLabel::generate(&graph1_4);
-
-	if(CL1_3.compare(CL1_4)!=0)
-	{
-		cout<<"Different!"<<endl<<CL1_3<<endl<<CL1_4<<endl;
-		return false;
-	}
-
-	return true;
+    return prefix;
 }
 
-string CL_Partition::getPrefix()
-{
-	string prefix;
-	for(vector<NodeWithInfo*>::iterator iter = nodes.begin();iter!=nodes.end();iter++)
-	{
-		prefix.append(doubleToString((*iter)->node->getLabel()));
-		prefix.append("\0");
-	}
+void CL_Partition::cl_part_destructor() {
+    //delete combinations
+    for (vector<vector<NodeWithInfo *> *>::iterator iter = combinations.begin(); iter != combinations.end(); ++iter) {
+        vector<NodeWithInfo *> *temp_v = (*iter);
 
-	return prefix;
+        delete temp_v;
+    }
+
+    st_counter--;
 }
 
-void CL_Partition::CL_Part_Destructor()
-{
-	//delete combinations
-	for(vector<vector<NodeWithInfo* >* >::iterator iter = combinations.begin();iter!=combinations.end();++iter)
-	{
-		vector<NodeWithInfo*>* tempV = (*iter);
-
-		delete tempV;
-	}
-
-	st_counter--;
-}
-
-bool CanonicalLabel::sortPartitions(vector<CL_Partition* >& parts)
-{
-	bool b = true;
+bool CanonicalLabel::sort_partitions(vector<CL_Partition *> &parts) {
+    bool b = true;
     // Sort by node_label in descending order
-	sort(parts.begin(), parts.begin()+parts.size(), descending);//std::greater<CL_Partition*>());
-	int i=0;
-	for(auto part : parts)
-	{
-        int oldID = part->getID();
-		if(oldID!=i)
-			b = false;
-		part->setID(i);
-		i++;
-	}
-	return b;
+    sort(parts.begin(), parts.begin() + parts.size(), descending);//std::greater<CL_Partition*>());
+    int i = 0;
+    for (auto part: parts) {
+        int old_id = part->get_id();
+        if (old_id != i)
+            b = false;
+        part->set_id(i);
+        i++;
+    }
+    return b;
 }
 
 /**
@@ -183,524 +108,466 @@ bool CanonicalLabel::sortPartitions(vector<CL_Partition* >& parts)
  * "Finding Frequent Patterns in a Large Sparse Graph", DMKD 2005
  * If the graph is huge and takes much time, the returned canonical label is not unique and is identified by prefix of X
  */
-string CanonicalLabel::generate(GraphX* graph)
-{
-	if(graph->getNumOfNodes()==0)
-		return "";
+string CanonicalLabel::generate(GraphX *graph) {
+    if (graph->get_num_of_nodes() == 0)
+        return "";
 
-	map<int , NodeWithInfo* > allNodes;
+    map<int, NodeWithInfo *> all_nodes;
 
-	//partition by label and degree, which means: "degree_label" -> group of nodes' info
-	map<string, CL_Partition* > parts;
-	for( tr1::unordered_map<int,NodeX*>::const_iterator enum1=graph->getNodesIterator(); enum1!=graph->getNodesEndIterator(); ++enum1)
-	{
-		NodeX* node = (*enum1).second;
-		NodeWithInfo* nInfo = new NodeWithInfo(node);
-		string label = doubleToString(nInfo->node->getLabel());
-		int degree = nInfo->node->getEdgesSize();
-		string key = degree+"_"+label;
+    //partition by label and degree, which means: "degree_label" -> group of nodes' info
+    map<string, CL_Partition *> parts;
+    for (tr1::unordered_map<int, NodeX *>::const_iterator enum1 = graph->get_nodes_iterator(); enum1 !=
+                                                                                               graph->get_nodes_end_iterator(); ++enum1) {
+        NodeX *node = (*enum1).second;
+        NodeWithInfo *nInfo = new NodeWithInfo(node);
+        string label = double_to_string(nInfo->node->get_label());
+        int degree = nInfo->node->get_edges_size();
+        string key = degree + "_" + label;
 
-		map<string, CL_Partition* >::iterator tIter = parts.find(key);
-		CL_Partition* part;
-		if(tIter==parts.end())
-		{
-			part = new CL_Partition(parts.size());
-			parts[key] = part;
-		}
-		else
-		{
-			part = (*tIter).second;
-		}
+        map<string, CL_Partition *>::iterator t_iter = parts.find(key);
+        CL_Partition *part;
+        if (t_iter == parts.end()) {
+            part = new CL_Partition(parts.size());
+            parts[key] = part;
+        } else {
+            part = (*t_iter).second;
+        }
 
-		part->addNode(nInfo);
-		nInfo->partID = part->getID();
-		allNodes[nInfo->node->getID()] = nInfo;
-		//cout<<"nInfo ID: "<<nInfo->node->getID()<<", nInfo->partID: "<<nInfo->partID<<endl;
-		part->setSortingValues();
-	}
+        part->add_node(nInfo);
+        nInfo->part_id = part->get_id();
+        all_nodes[nInfo->node->get_id()] = nInfo;
+        //cout<<"nInfo ID: "<<nInfo->node->get_id()<<", nInfo->part_id: "<<nInfo->part_id<<endl;
+        part->set_sorting_values();
+    }
 
-    // convert the map "parts" to the vector "partsV"
-	vector<CL_Partition* > partsV;
-    // partsV: the vector of CL_Partition
-	MapToVec(parts, partsV);
-	parts.clear();
-    // Sort by node_label in descending order, reorder the partID
-	sortPartitions(partsV);
-	//generate Neighbors list, then sort nodes inside each partition
-	for(auto part : partsV)
-	{
-			//for each node generate NL
-		for(auto enum2 = part->getNodesEnum(); enum2 != part->getNodesEnd(); ++enum2)
-		{
-			NodeWithInfo* nInfo = *enum2;
-            // otherNodesPartID + {otherNodeLabel + edgeLabel}
-			nInfo->nl = generateNeighborsList(nInfo, allNodes);
-			//cout<<"NInfo Node ID: "<<nInfo->toString()<<endl;
-		}
-		//sort nodes
-		part->sortNodes();
-	}
-	sortPartitions(partsV);
+    // convert the map "parts" to the vector "parts_v"
+    vector<CL_Partition *> parts_v;
+    // parts_v: the vector of CL_Partition
+    map_to_vec(parts, parts_v);
+    parts.clear();
+    // Sort by node_label in descending order, reorder the part_id
+    sort_partitions(parts_v);
+    //generate Neighbors list, then sort nodes inside each partition
+    for (auto part: parts_v) {
+        //for each node generate NL
+        for (auto enum2 = part->get_nodes_enum(); enum2 != part->get_nodes_end(); ++enum2) {
+            NodeWithInfo *n_info = *enum2;
+            // otherNodesPartID + {otherNodeLabel + edge_label}
+            n_info->nl = generate_neighbors_list(n_info, all_nodes);
+            //cout<<"NInfo Node ID: "<<n_info->to_string()<<endl;
+        }
+        //sort nodes
+        part->sort_nodes();
+    }
+    sort_partitions(parts_v);
 
-	//iterative partitioning
-	while(true)
-	{
-		//generate new partitions
-		bool b = false;
-		unsigned int i = 0;
-		for(auto enum1 = partsV.begin(); enum1 != partsV.end(); ++enum1)
-		{
-			CL_Partition* part = *enum1;
-			map<string, CL_Partition*>* newParts = part->getNewParts();
-			if(newParts!= NULL)
-			{
-				//invalidate the 'enum1' iterator
-				enum1 = partsV.end();
+    //iterative partitioning
+    while (true) {
+        //generate new partitions
+        bool b = false;
+        unsigned int i = 0;
+        for (auto enum1 = parts_v.begin(); enum1 != parts_v.end(); ++enum1) {
+            CL_Partition *part = *enum1;
+            map<string, CL_Partition *> *new_parts = part->get_new_parts();
+            if (new_parts != NULL) {
+                //invalidate the 'enum1' iterator
+                enum1 = parts_v.end();
 
-				vector<CL_Partition* > newPartsArr;
-				MapToVec(*newParts, newPartsArr);
-				newParts->clear();
-				delete newParts;
-				for(auto & j : newPartsArr)
-				{
-					j->setSortingValues();
-				}
+                vector<CL_Partition *> new_parts_arr;
+                map_to_vec(*new_parts, new_parts_arr);
+                new_parts->clear();
+                delete new_parts;
+                for (auto &j: new_parts_arr) {
+                    j->set_sorting_values();
+                }
 
-				sort(newPartsArr.begin(), newPartsArr.begin()+newPartsArr.size(), ascending);
+                sort(new_parts_arr.begin(), new_parts_arr.begin() + new_parts_arr.size(), ascending);
 
-				(*(partsV.begin()+i))->CL_Part_Destructor();
-				delete (*(partsV.begin()+i));
-				partsV.erase(partsV.begin()+i);
+                (*(parts_v.begin() + i))->cl_part_destructor();
+                delete (*(parts_v.begin() + i));
+                parts_v.erase(parts_v.begin() + i);
 
-				int j_count = 0;
-                //Repartition using partition information in partsV and newPartsArr
-				for(auto j = newPartsArr.begin(); j!=newPartsArr.end(); ++j,j_count++)
-				{
-					(*j)->setID(i+j_count);
-					(*j)->setSortingValues();
-					partsV.insert(partsV.begin()+i+j_count, *j);
-				}
+                int j_count = 0;
+                //Repartition using partition information in parts_v and new_parts_arr
+                for (auto j = new_parts_arr.begin(); j != new_parts_arr.end(); ++j, j_count++) {
+                    (*j)->set_id(i + j_count);
+                    (*j)->set_sorting_values();
+                    parts_v.insert(parts_v.begin() + i + j_count, *j);
+                }
 
-				for(unsigned int j=i+newPartsArr.size();j<partsV.size();j++)
-				{
-					(*(partsV.begin()+j))->setID(j);
-				}
-				newPartsArr.clear();
+                for (unsigned int j = i + new_parts_arr.size(); j < parts_v.size(); j++) {
+                    (*(parts_v.begin() + j))->set_id(j);
+                }
+                new_parts_arr.clear();
 
-				//generate Neighbors list, then sort nodes inside each partition
-				for(auto part2 : partsV)
-				{
-                    int toto = part2->getID();
+                //generate Neighbors list, then sort nodes inside each partition
+                for (auto part2: parts_v) {
+                    int toto = part2->get_id();
 
-					//for each node generate NL
-					for(auto enum2 = part2->getNodesEnum();enum2!=part2->getNodesEnd();++enum2)
-					{
-						NodeWithInfo* nInfo = *enum2;
-						nInfo->nl = generateNeighborsList(nInfo, allNodes);
-					}
-					//sort nodes
-					part2->sortNodes();
-				}
+                    //for each node generate NL
+                    for (auto enum2 = part2->get_nodes_enum(); enum2 != part2->get_nodes_end(); ++enum2) {
+                        NodeWithInfo *nInfo = *enum2;
+                        nInfo->nl = generate_neighbors_list(nInfo, all_nodes);
+                    }
+                    //sort nodes
+                    part2->sort_nodes();
+                }
 
-				b = true;
+                b = true;
 
-				break;
-			}
-			i++;
-		}
+                break;
+            }
+            i++;
+        }
 
-		if(i==partsV.size()) break;
-	}
+        if (i == parts_v.size()) break;
+    }
 
-	//reset counters and generate signature prefix
-	string prefix;
-	for(auto & i : partsV)
-	{
-		if(enablePrint)
-		{
-			cout<<"Part:"+intToString(i->getID())<<endl;
-			cout<<i->getCombinations()->size()<<endl;
-		}
-		i->counter = 0;
-		prefix.append(i->getPrefix());
-		prefix.append(",");
-	}
+    //reset counters and generate signature prefix
+    string prefix;
+    for (auto &i: parts_v) {
+        if (enable_print) {
+            cout << "Part:" + int_to_string(i->get_id()) << endl;
+            cout << i->get_combinations()->size() << endl;
+        }
+        i->counter = 0;
+        prefix.append(i->get_prefix());
+        prefix.append(",");
+    }
 
-	//generate a fast lookup array for edge labels
-	//get the maximum label id
-	int maxLabelID = 0;
-	for(tr1::unordered_map<int, NodeX*>::const_iterator iter = graph->getNodesIterator();iter!=graph->getNodesEndIterator();++iter)
-	{
-		int currID = iter->second->getID();
-		if(maxLabelID<currID)
-			maxLabelID = currID;
-	}
+    //generate a fast lookup array for edge labels
+    //get the maximum label id
+    int max_label_id = 0;
+    for (tr1::unordered_map<int, NodeX *>::const_iterator iter = graph->get_nodes_iterator(); iter !=
+                                                                                              graph->get_nodes_end_iterator(); ++iter) {
+        int curr_id = iter->second->get_id();
+        if (max_label_id < curr_id)
+            max_label_id = curr_id;
+    }
 
 //    ellt: edge label look table
-	double** ellt = new double*[maxLabelID+1];
-	for(int i=0;i<(maxLabelID+1);i++)
-		ellt[i] = new double[maxLabelID+1];
-	//fill in the edge labels
-	for(tr1::unordered_map<int, NodeX*>::const_iterator i=graph->getNodesIterator();i!=graph->getNodesEndIterator();i++)
-	{
-		int id1 = i->second->getID();
-		for(tr1::unordered_map<int, NodeX*>::const_iterator ii=graph->getNodesIterator();ii!=graph->getNodesEndIterator();ii++)
-		{
-			int id2 = ii->second->getID();
-			ellt[id1][id2] = graph->getEdgeLabel(id1, id2);
-		}
-	}
+    double **ellt = new double *[max_label_id + 1];
+    for (int i = 0; i < (max_label_id + 1); i++)
+        ellt[i] = new double[max_label_id + 1];
+    //fill in the edge labels
+    for (tr1::unordered_map<int, NodeX *>::const_iterator i = graph->get_nodes_iterator(); i !=
+                                                                                           graph->get_nodes_end_iterator(); i++) {
+        int id1 = i->second->get_id();
+        for (tr1::unordered_map<int, NodeX *>::const_iterator ii = graph->get_nodes_iterator(); ii !=
+                                                                                                graph->get_nodes_end_iterator(); ii++) {
+            int id2 = ii->second->get_id();
+            ellt[id1][id2] = graph->get_edge_label(id1, id2);
+        }
+    }
 
-	for(int i=0;i<partsV.size();i++)
-	{
-		if(partsV.at(i)->getNumNodes()>10)
-		{
-			if(Settings::debugMSG)
-			{
-				cout<<"pre_pre_ number of combinations is very large = ("<<partsV.at(i)->getNumNodes()<<"!), "<<endl;
-			}
-			stringstream nosig;
-			nosig<<"X"<<graph->getNumOfNodes()<<"_"<<graph->getNumOfEdges();
-			return nosig.str();
-		}
-	}
+    for (int i = 0; i < parts_v.size(); i++) {
+        if (parts_v.at(i)->get_num_nodes() > 10) {
+            if (Settings::debug_msg) {
+                cout << "pre_pre_ number of combinations is very large = (" << parts_v.at(i)->get_num_nodes() << "!), "
+                     << endl;
+            }
+            stringstream nosig;
+            nosig << "X" << graph->get_num_of_nodes() << "_" << graph->get_num_of_edges();
+            return nosig.str();
+        }
+    }
 
-	long numberOfCombinations_ = 1;
-	for(int i=1;i<partsV.size();i++)
-	{
-		numberOfCombinations_ = numberOfCombinations_*partsV.at(i)->getCombinations()->size();
-	}
+    long number_of_combinations_ = 1;
+    for (int i = 1; i < parts_v.size(); i++) {
+        number_of_combinations_ = number_of_combinations_ * parts_v.at(i)->get_combinations()->size();
+    }
 
-	if(numberOfCombinations_>2000000 || partsV.at(0)->getCombinations()->size()>200000)
-	{
-		if(Settings::debugMSG)
-		{
-			cout<<"pre_ number of combinations exceeded: "<<numberOfCombinations_<<", "<<partsV.at(0)->getCombinations()->size()<<endl;
-		}
+    if (number_of_combinations_ > 2000000 || parts_v.at(0)->get_combinations()->size() > 200000) {
+        if (Settings::debug_msg) {
+            cout << "pre_ number of combinations exceeded: " << number_of_combinations_ << ", " << parts_v.at(
+                    0)->get_combinations()->size() << endl;
+        }
 
-		stringstream nosig;
-		nosig<<"X"<<graph->getNumOfNodes()<<"_"<<graph->getNumOfEdges();
-		return nosig.str();
-	}
+        stringstream nosig;
+        nosig << "X" << graph->get_num_of_nodes() << "_" << graph->get_num_of_edges();
+        return nosig.str();
+    }
 
-	//an optimization for the first partition
-	//only store permutations where the first line is the max
+    //an optimization for the first partition
+    //only store permutations where the first line is the max
 
-	//get the max signature line
-	char* maxSigLine = 0;
-	CL_Partition* firstPart = partsV.at(0);
-	for(auto singleComb : *firstPart->getCombinations())
-	{
-			char* temp1 = generateCanLabel(singleComb, graph, ellt, true);
+    //get the max signature line
+    char *max_sig_line = 0;
+    CL_Partition *first_part = parts_v.at(0);
+    for (auto single_comb: *first_part->get_combinations()) {
+        char *temp1 = generate_can_label(single_comb, graph, ellt, true);
 
-		if(maxSigLine==0 || strcmp(temp1, maxSigLine)>0)
-		{
-			if(maxSigLine!=0)
-				delete[] maxSigLine;
+        if (max_sig_line == 0 || strcmp(temp1, max_sig_line) > 0) {
+            if (max_sig_line != 0)
+                delete[] max_sig_line;
 
-			int length = strlen(temp1);
-			maxSigLine = new char[length+1];
-			strcpy(maxSigLine, temp1);
-		}
-	}
+            int length = strlen(temp1);
+            max_sig_line = new char[length + 1];
+            strcpy(max_sig_line, temp1);
+        }
+    }
 
-	//delete any permutation from the first partition that is less than the max
-	for(auto iter = firstPart->getCombinations()->begin();iter!=firstPart->getCombinations()->end();)
-	{
-		vector<NodeWithInfo*>* singleComb = (*iter);
+    //delete any permutation from the first partition that is less than the max
+    for (auto iter = first_part->get_combinations()->begin(); iter != first_part->get_combinations()->end();) {
+        vector<NodeWithInfo *> *single_comb = (*iter);
 
-		char* temp1 = generateCanLabel(singleComb, graph, ellt, true);
+        char *temp1 = generate_can_label(single_comb, graph, ellt, true);
 
-		if(strcmp(temp1, maxSigLine)<0)
-		{
-			iter = firstPart->getCombinations()->erase(iter);
-		}
-		else
-			iter++;
-	}
+        if (strcmp(temp1, max_sig_line) < 0) {
+            iter = first_part->get_combinations()->erase(iter);
+        } else
+            iter++;
+    }
 
-	long numberOfCombinations = 1;
-	for(int i=0;i<partsV.size();i++)
-	{
-		numberOfCombinations = numberOfCombinations*partsV.at(i)->getCombinations()->size();
-	}
+    long number_of_combinations = 1;
+    for (int i = 0; i < parts_v.size(); i++) {
+        number_of_combinations = number_of_combinations * parts_v.at(i)->get_combinations()->size();
+    }
 
-	if(numberOfCombinations>20000000)//numberOfCombinations>2)//it was 20000000
-	{
-		if(Settings::debugMSG)
-		{
-			cout<<"number of combinations exceeded: "<<numberOfCombinations_<<", "<<partsV.at(0)->getCombinations()->size()<<endl;
-		}
+    if (number_of_combinations > 20000000)//number_of_combinations>2)//it was 20000000
+    {
+        if (Settings::debug_msg) {
+            cout << "number of combinations exceeded: " << number_of_combinations_ << ", " << parts_v.at(
+                    0)->get_combinations()->size() << endl;
+        }
 
-		stringstream nosig;
-		nosig<<"X"<<graph->getNumOfNodes()<<"_"<<graph->getNumOfEdges();
-		return nosig.str();
-	}
+        stringstream nosig;
+        nosig << "X" << graph->get_num_of_nodes() << "_" << graph->get_num_of_edges();
+        return nosig.str();
+    }
 
-	//generate permutations and save the max
-	char* maxCL = new char[1];
-	maxCL[0] = 0;
+    //generate permutations and save the max
+    char *max_cl = new char[1];
+    max_cl[0] = 0;
 
-	vector<NodeWithInfo* >* bestCombination = nullptr;
-	bool b = true;
-	int count = 0;
-	while(true)
-	{
-		count++;
-		if(count%1000000==0)
-		{
-			cout<<count<<"/"<<numberOfCombinations<<endl;
-		}
-		//add a combination
-		vector<NodeWithInfo* >* singleCombination = new vector<NodeWithInfo* >();
-		for(auto & i : partsV)
-		{
-			vector<NodeWithInfo*>* temp = *((i->getCombinations())->begin()+i->counter);
-			singleCombination->insert(singleCombination->end(), temp->begin(), temp->end());
-		}
+    vector<NodeWithInfo *> *best_combination = nullptr;
+    bool b = true;
+    int count = 0;
+    while (true) {
+        count++;
+        if (count % 1000000 == 0) {
+            cout << count << "/" << number_of_combinations << endl;
+        }
+        //add a combination
+        vector<NodeWithInfo *> *single_combination = new vector<NodeWithInfo *>();
+        for (auto &i: parts_v) {
+            vector<NodeWithInfo *> *temp = *((i->get_combinations())->begin() + i->counter);
+            single_combination->insert(single_combination->end(), temp->begin(), temp->end());
+        }
 
-		char* temp = generateCanLabel(singleCombination, graph, ellt);
+        char *temp = generate_can_label(single_combination, graph, ellt);
 
-		if(enablePrint) cout<<temp<<endl;
-		if(bestCombination==0 || strcmp(temp, maxCL)>0)
-		{
-			delete[] maxCL;
-			delete bestCombination;
+        if (enable_print) cout << temp << endl;
+        if (best_combination == 0 || strcmp(temp, max_cl) > 0) {
+            delete[] max_cl;
+            delete best_combination;
 
-			int sigLength = strlen(temp);
-			maxCL = new char[sigLength+1];
-			strcpy (maxCL, temp);
+            int sigLength = strlen(temp);
+            max_cl = new char[sigLength + 1];
+            strcpy(max_cl, temp);
 
-			bestCombination = singleCombination;
-		}
-		else
-		{
-			//delete temp;
-			delete singleCombination;
-		}
+            best_combination = single_combination;
+        } else {
+            //delete temp;
+            delete single_combination;
+        }
 
-		//increase counters
-		int i_counter = partsV.size()-1;
-		for(auto i = partsV.rbegin();i!=partsV.rend();++i,--i_counter)
-		{
-			if((*i)->counter<(*i)->getCombinations()->size()-1)
-			{
-				(*i)->counter++;
-				break;
-			}
-			else if(i_counter==0)
-				b = false;
-			else
-				(*i)->counter = 0;
-		}
+        //increase counters
+        int i_counter = parts_v.size() - 1;
+        for (auto i = parts_v.rbegin(); i != parts_v.rend(); ++i, --i_counter) {
+            if ((*i)->counter < (*i)->get_combinations()->size() - 1) {
+                (*i)->counter++;
+                break;
+            } else if (i_counter == 0)
+                b = false;
+            else
+                (*i)->counter = 0;
+        }
 
-		if(!b)
-			break;
-	}
+        if (!b)
+            break;
+    }
 
-	for(int i=0;i<(maxLabelID+1);i++)
-		delete[] ellt[i];
-	delete[] ellt;
+    for (int i = 0; i < (max_label_id + 1); i++)
+        delete[] ellt[i];
+    delete[] ellt;
 
-	//cout<<"*"<<maxCL<<endl;
+    //cout<<"*"<<max_cl<<endl;
 
-	if(enablePrint) cout<<"Start destruction ...."<<endl;
-	for(vector<CL_Partition* >::iterator i = partsV.begin();i!=partsV.end();++i)
-	{
-		//added to delete NodeWithInfo for this partition
-		if((*i)->getCombinations()->size()>0)
-		{
-			for(auto iter1 = (*(*i)->getCombinations()->begin())->begin();iter1!=(*(*i)->getCombinations()->begin())->end();++iter1)
-			{
-				delete (*iter1);
-			}
-		}
+    if (enable_print) cout << "Start destruction ...." << endl;
+    for (vector<CL_Partition *>::iterator i = parts_v.begin(); i != parts_v.end(); ++i) {
+        //added to delete NodeWithInfo for this partition
+        if ((*i)->get_combinations()->size() > 0) {
+            for (auto iter1 = (*(*i)->get_combinations()->begin())->begin();
+                 iter1 != (*(*i)->get_combinations()->begin())->end(); ++iter1) {
+                delete (*iter1);
+            }
+        }
 
-		(*i)->CL_Part_Destructor();
-		delete (*i);
-	}
-	partsV.clear();
-	if(enablePrint) cout<<"All destruction work finished"<<endl;
+        (*i)->cl_part_destructor();
+        delete (*i);
+    }
+    parts_v.clear();
+    if (enable_print) cout << "All destruction work finished" << endl;
 
-	string temp(prefix);
-	temp.append(maxCL);
-	delete maxCL;
-	return temp;
+    string temp(prefix);
+    temp.append(max_cl);
+    delete max_cl;
+    return temp;
 }
 
-string CanonicalLabel::generateNeighborsList(NodeWithInfo* nInfo, map<int , NodeWithInfo* >& allNodes)
-{
-	string sb = "";
+string CanonicalLabel::generate_neighbors_list(NodeWithInfo *nInfo, map<int, NodeWithInfo *> &allNodes) {
+    string sb = "";
 
-	NodeX* node = nInfo->node;
+    NodeX *node = nInfo->node;
 
-	vector<PartID_label* > orderedNL;
-	for( tr1::unordered_map<int, void*>::const_iterator enum1=node->getEdgesIterator(); enum1!=node->getEdgesEndIterator(); ++enum1)
-	{
-		EdgeX* edge = (EdgeX*)enum1->second;
+    vector<PartID_label *> ordered_nl;
+    for (tr1::unordered_map<int, void *>::const_iterator enum1 = node->get_edges_iterator(); enum1 !=
+                                                                                             node->get_edges_end_iterator(); ++enum1) {
+        EdgeX *edge = (EdgeX *) enum1->second;
 
-		//get the other node partition
-		NodeX* oNode = edge->getOtherNode();
-		int oNodePartID = (allNodes.find(oNode->getID()))->second->partID;
+        //get the other node partition
+        NodeX *o_node = edge->get_other_node();
+        int o_node_part_id = (allNodes.find(o_node->get_id()))->second->part_id;
 
-		//prepare the details
-		string oNodeLabel = doubleToString(oNode->getLabel());
-		PartID_label* pidl = new PartID_label();
-        // pidl->label: otherNodeLabel + edgeLabel
-		pidl->label = oNodeLabel;
-		pidl->label = pidl->label+doubleToString(edge->getLabel());//added by ehab on 13 Aug 2015
-		pidl->partID = oNodePartID;
+        //prepare the details
+        string o_node_label = double_to_string(o_node->get_label());
+        PartID_label *pidl = new PartID_label();
+        // pidl->label: otherNodeLabel + edge_label
+        pidl->label = o_node_label;
+        pidl->label = pidl->label + double_to_string(edge->get_label());//added by ehab on 13 Aug 2015
+        pidl->part_id = o_node_part_id;
 
-		//put the details in order
-		auto i = orderedNL.begin();
-		for(;i!=orderedNL.end();i++)
-		{
-			PartID_label* currentpidl = *i;
-			if(pidl->partID>currentpidl->partID || (pidl->partID==currentpidl->partID && pidl->label.compare(currentpidl->label)>0))
-				;
-			else
-				break;
-		}
-		orderedNL.insert(i, pidl);
-	}
+        //put the details in order
+        auto i = ordered_nl.begin();
+        for (; i != ordered_nl.end(); i++) {
+            PartID_label *current_pidl = *i;
+            if (pidl->part_id > current_pidl->part_id ||
+                (pidl->part_id == current_pidl->part_id && pidl->label.compare(current_pidl->label) > 0));
+            else
+                break;
+        }
+        ordered_nl.insert(i, pidl);
+    }
 
-	for(auto & i : orderedNL)
-	{
-		sb.append(i->toString());
-		delete i;
-	}
+    for (auto &i: ordered_nl) {
+        sb.append(i->to_string());
+        delete i;
+    }
 
-	return sb;
+    return sb;
 }
 
-char* CanonicalLabel::generateCanLabel(vector<NodeWithInfo* >* nodes, GraphX* graph, double** ellt, bool oneLineOnly)
-{
-	char* sb = CanonicalLabel::sigBuffer;//new char[(nodes->size()-1)*10];
-	char* startSB = sb;
+char *
+CanonicalLabel::generate_can_label(vector<NodeWithInfo *> *nodes, GraphX *graph, double **ellt, bool one_line_only) {
+    char *sb = CanonicalLabel::sig_buffer;//new char[(nodes->size()-1)*10];
+    char *start_sb = sb;
 
-	//add the upper triangle thing
-	auto nodesEnd = nodes->end();
-	vector<NodeWithInfo* >::iterator j;
-	auto enum1 = nodes->begin();
-	while(true)
-	//for(vector<NodeWithInfo* >::iterator enum1 = nodes->begin();enum1!=nodesEnd;++enum1)
-	{
-		NodeWithInfo* nInfo1 = *enum1;
-		double* _label = ellt[nInfo1->node->getID()];
+    //add the upper triangle thing
+    auto nodes_end = nodes->end();
+    vector<NodeWithInfo *>::iterator j;
+    auto enum1 = nodes->begin();
+    while (true)
+        //for(vector<NodeWithInfo* >::iterator enum1 = nodes->begin();enum1!=nodes_end;++enum1)
+    {
+        NodeWithInfo *n_info1 = *enum1;
+        double *_label = ellt[n_info1->node->get_id()];
 
-		j = enum1+1;
-		if(j==nodesEnd)
-			break;
-		for(;j!=nodesEnd;++j)
-		{
+        j = enum1 + 1;
+        if (j == nodes_end)
+            break;
+        for (; j != nodes_end; ++j) {
             // edge label
-			double label = _label[(*j)->node->getID()];
-			if(label==0.0001)
-			{
-				*sb='0';
-				sb++;
-			}
-			else
-			{
-				sb+=mysprintf(sb, (int)label);
-			}
-		}
-		*sb=',';
-		sb++;
+            double label = _label[(*j)->node->get_id()];
+            if (label == 0.0001) {
+                *sb = '0';
+                sb++;
+            } else {
+                sb += mysprintf(sb, (int) label);
+            }
+        }
+        *sb = ',';
+        sb++;
 
-		if(oneLineOnly)
-			break;
-		++enum1;
-	}
+        if (one_line_only)
+            break;
+        ++enum1;
+    }
 
-	*sb = '\0';
-	return startSB;
+    *sb = '\0';
+    return start_sb;
 }
 
-bool ascending(CL_Partition* a, CL_Partition* b)
-{
-	int r = a->nodeLabel.compare(b->nodeLabel);
-	if(r!=0)
-	{
-		if(r<0) return true;
-		else return false;
-	}
+bool ascending(CL_Partition *a, CL_Partition *b) {
+    int r = a->node_label.compare(b->node_label);
+    if (r != 0) {
+        if (r < 0) return true;
+        else return false;
+    }
 
-	if(a->degree!=b->degree)
-	{
-		if(a->degree-b->degree<0) return true;
-		else return false;
-	}
+    if (a->degree != b->degree) {
+        if (a->degree - b->degree < 0) return true;
+        else return false;
+    }
 
-	r = a->nl.compare(b->nl);
-	if(r!=0)
-	{
-		if(r<0) return true;
-		else return false;
-	}
+    r = a->nl.compare(b->nl);
+    if (r != 0) {
+        if (r < 0) return true;
+        else return false;
+    }
 
-	if(a->partID<b->partID)
-		return true;
-	else
-		return false;
+    if (a->part_id < b->part_id)
+        return true;
+    else
+        return false;
 }
 
-bool descending(CL_Partition* a, CL_Partition* b)
-{
-	return !ascending(a, b);
+bool descending(CL_Partition *a, CL_Partition *b) {
+    return !ascending(a, b);
 }
 
 /**
  * this function should be called once all partitions get properly partitioned
  */
-void CL_Partition::setSortingValues()
-{
-	NodeWithInfo* nInfo = *(nodes.begin());
-	degree = nInfo->node->getEdgesSize();
-	nodeLabel = nInfo->node->getLabel();
-	nl = nInfo->nl;
+void CL_Partition::set_sorting_values() {
+    NodeWithInfo *n_info = *(nodes.begin());
+    degree = n_info->node->get_edges_size();
+    node_label = n_info->node->get_label();
+    nl = n_info->nl;
 }
 
-CL_Partition::CL_Partition(int partID)
-{
-	this->partID = partID;
-	CL_Partition::st_counter++;
+CL_Partition::CL_Partition(int part_id) {
+    this->part_id = part_id;
+    CL_Partition::st_counter++;
 }
 
-void CL_Partition::addNode(NodeWithInfo* nInfo)
-{
-	nInfo->partID = this->partID;
-	nodes.push_back(nInfo);
+void CL_Partition::add_node(NodeWithInfo *n_info) {
+    n_info->part_id = this->part_id;
+    nodes.push_back(n_info);
 }
 
-vector<NodeWithInfo*>::const_iterator CL_Partition::getNodesEnum() const
-{
-	return nodes.begin();
+vector<NodeWithInfo *>::const_iterator CL_Partition::get_nodes_enum() const {
+    return nodes.begin();
 }
 
-int CL_Partition::getNumNodes()
-{
-	return nodes.size();
+int CL_Partition::get_num_nodes() {
+    return nodes.size();
 }
 
-void CL_Partition::clearNodes()
-{
-	nodes.clear();
+void CL_Partition::clear_nodes() {
+    nodes.clear();
 }
 
-void CL_Partition::setID(int partID)
-{
-	this->partID = partID;
-	for(vector<NodeWithInfo*>::iterator enum1 = nodes.begin();enum1!=nodes.end();++enum1)
-	{
-		NodeWithInfo* nInfo = *enum1;
-		nInfo->partID = this->partID;
-	}
+void CL_Partition::set_id(int partID) {
+    this->part_id = partID;
+    for (vector<NodeWithInfo *>::iterator enum1 = nodes.begin(); enum1 != nodes.end(); ++enum1) {
+        NodeWithInfo *nInfo = *enum1;
+        nInfo->part_id = this->part_id;
+    }
 }
 
-int CL_Partition::getID()
-{
-	return partID;
+int CL_Partition::get_id() {
+    return part_id;
 }
 
 /**
@@ -708,140 +575,122 @@ int CL_Partition::getID()
  * returns null if no need to partition
  * [Translated to C++]
  */
-map<string, CL_Partition*>* CL_Partition::getNewParts()
-{
-	if(nodes.size()==1)
-		return NULL;
+map<string, CL_Partition *> *CL_Partition::get_new_parts() {
+    if (nodes.size() == 1)
+        return NULL;
 
-	auto* parts = new map<string, CL_Partition* >();
-	for(auto nInfo : nodes)
-	{
+    auto *parts = new map<string, CL_Partition *>();
+    for (auto nInfo: nodes) {
         string key = nInfo->nl;
 
-		auto temp = parts->find(key);
-		CL_Partition* part;
-		if(temp==parts->end())
-		{
-			part = new CL_Partition(parts->size());
-			(*parts)[key]= part;
-		}
-		else
-			part = temp->second;
-		part->addNode(nInfo);
-	}
+        auto temp = parts->find(key);
+        CL_Partition *part;
+        if (temp == parts->end()) {
+            part = new CL_Partition(parts->size());
+            (*parts)[key] = part;
+        } else
+            part = temp->second;
+        part->add_node(nInfo);
+    }
 
-	if(parts->size()==1)
-	{
-		parts->begin()->second->CL_Part_Destructor();
-		delete parts->begin()->second;
-		parts->clear();
-		delete parts;
-		return NULL;
-	}
-	else
-		return parts;
+    if (parts->size() == 1) {
+        parts->begin()->second->cl_part_destructor();
+        delete parts->begin()->second;
+        parts->clear();
+        delete parts;
+        return NULL;
+    } else
+        return parts;
 }
 
-string CL_Partition::toString()
-{
-	string sb = "";
-	sb.append("Partition ID: "+intToString(partID)+"\n");
+string CL_Partition::to_string() {
+    string sb = "";
+    sb.append("Partition ID: " + int_to_string(part_id) + "\n");
 
-	for(vector<NodeWithInfo*>::iterator enum1 = nodes.begin(); enum1!=nodes.end(); ++enum1)
-	{
-		NodeWithInfo* nInfo = *enum1;
-		sb.append(nInfo->toString()+"\n");
-	}
+    for (vector<NodeWithInfo *>::iterator enum1 = nodes.begin(); enum1 != nodes.end(); ++enum1) {
+        NodeWithInfo *n_info = *enum1;
+        sb.append(n_info->to_string() + "\n");
+    }
 
-	return sb;
+    return sb;
 }
 
-vector<vector<NodeWithInfo* >* >* CL_Partition::getCombinations()
-{
-	if(combinations.size()>0)
-		return &combinations;
+vector<vector<NodeWithInfo *> *> *CL_Partition::get_combinations() {
+    if (combinations.size() > 0)
+        return &combinations;
 
-	auto* notused = new vector<NodeWithInfo* >(nodes);
+    auto *notused = new vector<NodeWithInfo *>(nodes);
 
-	//check if all nodes within this partition are only connected to each other
-	//collect all nodes in a map
-	tr1::unordered_set<int> allNodes;
-	for(auto & node : nodes)
-	{
-		allNodes.insert(node->node->getID());
-	}
-	bool connectedWithin = true;
-	for(auto & iter : nodes)
-	{
-		NodeX* node = iter->node;
-		for(tr1::unordered_map<int, void*>::iterator iter1 = node->getEdgesIterator();iter1!=node->getEdgesEndIterator();iter1++)
-		{
-			int otherNodeID = ((EdgeX*)iter1->second)->getOtherNode()->getID();
-			if(allNodes.find(otherNodeID)==allNodes.end())
-			{
-				connectedWithin = false;
-				break;
-			}
-		}
-		if(!connectedWithin)
-			break;
-	}
+    //check if all nodes within this partition are only connected to each other
+    //collect all nodes in a map
+    tr1::unordered_set<int> all_nodes;
+    for (auto &node: nodes) {
+        all_nodes.insert(node->node->get_id());
+    }
+    bool connected_within = true;
+    for (auto &iter: nodes) {
+        NodeX *node = iter->node;
+        for (tr1::unordered_map<int, void *>::iterator iter1 = node->get_edges_iterator(); iter1 !=
+                                                                                           node->get_edges_end_iterator(); iter1++) {
+            int other_node_id = ((EdgeX *) iter1->second)->get_other_node()->get_id();
+            if (all_nodes.find(other_node_id) == all_nodes.end()) {
+                connected_within = false;
+                break;
+            }
+        }
+        if (!connected_within)
+            break;
+    }
 
-	combinations_fn(notused, connectedWithin);
+    combinations_fn(notused, connected_within);
 
-	delete notused;
+    delete notused;
 
-	return &combinations;
+    return &combinations;
 }
 
-void CL_Partition::combinations_fn(vector<NodeWithInfo* >* notused, bool connectedWithin)
-{
-	do{
-		auto* v1 = new vector<NodeWithInfo* >(*notused);
-		combinations.insert(combinations.end(), v1);
-		//this needs a proof
-		if(connectedWithin)
-			break;
-	} while(std::next_permutation(notused->begin(),notused->end(), NodeWithInfo_descending));
+void CL_Partition::combinations_fn(vector<NodeWithInfo *> *notused, bool connected_within) {
+    do {
+        auto *v1 = new vector<NodeWithInfo *>(*notused);
+        combinations.insert(combinations.end(), v1);
+        //this needs a proof
+        if (connected_within)
+            break;
+    } while (std::next_permutation(notused->begin(), notused->end(), NodeWithInfo_descending));
 }
 
-void CL_Partition::sortNodes()
-{
-	sort(nodes.begin(), nodes.begin()+nodes.size(), NodeWithInfo_descending);//, std::greater<NodeWithInfo>());
+void CL_Partition::sort_nodes() {
+    sort(nodes.begin(), nodes.begin() + nodes.size(), NodeWithInfo_descending);//, std::greater<NodeWithInfo>());
 }
 
-bool NodeWithInfo_ascending (NodeWithInfo* a, NodeWithInfo* b)
-{
-	int r = a->nl.compare(b->nl);
-	if(r<0)
-		return true;
-	else if(r==0)//this part is not needed for the algorithm, but it is needed for the STL::next_permutation function
-	{
-		if(a->node->getID()<b->node->getID())
-			return true;
-		else
-			return false;
-	}
-	else
-		return false;
-}
-bool NodeWithInfo_descending (NodeWithInfo* a, NodeWithInfo* b)
-{
-	return !NodeWithInfo_ascending(a, b);
+bool NodeWithInfo_ascending(NodeWithInfo *a, NodeWithInfo *b) {
+    int r = a->nl.compare(b->nl);
+    if (r < 0)
+        return true;
+    else if (r == 0)//this part is not needed for the algorithm, but it is needed for the STL::next_permutation function
+    {
+        if (a->node->get_id() < b->node->get_id())
+            return true;
+        else
+            return false;
+    } else
+        return false;
 }
 
-NodeWithInfo::NodeWithInfo(NodeX* node)
-{
-	this->node = node;
-	NodeWithInfo::st_counter++;
+bool NodeWithInfo_descending(NodeWithInfo *a, NodeWithInfo *b) {
+    return !NodeWithInfo_ascending(a, b);
 }
 
-string NodeWithInfo::toString()
-{
-	return "NodeID: "+intToString(node->getID())+"\nPartID: "+intToString(partID)+"\nNeighbors List:"+nl;
+NodeWithInfo::NodeWithInfo(NodeX *node) {
+    this->node = node;
+    NodeWithInfo::st_counter++;
 }
 
-string PartID_label::toString()
-{
-	return "(p"+intToString(partID)+","+label+"),";
+string NodeWithInfo::to_string() {
+    return "NodeID: " + int_to_string(node->get_id()) + "\nPartID: " + int_to_string(part_id) + "\nNeighbors List:" +
+           nl;
+}
+
+string PartID_label::to_string() {
+    return "(p" + int_to_string(part_id) + "," + label + "),";
 }

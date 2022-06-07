@@ -8,29 +8,41 @@
 
 using namespace std;
 
-class NodeX
-{
+class NodeX {
 private:
-	int id;
-	double label;
-	tr1::unordered_map<int, void*> edges;
-	tr1::unordered_map<int, void*> revEdges;
+    int id;
+    double label;
+    tr1::unordered_map<int, void *> edges;
+    tr1::unordered_map<int, void *> rev_edges;
 
 public:
-	NodeX(int id, double value);
-	~NodeX();
-	void addEdge(NodeX* , double edgeLabel, int graphType);
-	void removeEdge(NodeX* , int graphType);
-	friend ostream& operator<<(ostream& os, const NodeX& n);
-	int getID() {return id;}
-	double getLabel() {return label;}
-	tr1::unordered_map<int, void*>::iterator getEdgesIterator() {return edges.begin();}
-	tr1::unordered_map<int, void*>::iterator getEdgesEndIterator() {return edges.end();}
-	int getEdgesSize() {return edges.size(); }
-	void* getEdgeForDestNode(int destNodeID );
-	bool isItConnectedWithNodeID(int nodeID);
-	bool isItConnectedWithNodeID(int nodeID, double label);
-	bool isNeighborhoodConsistent(NodeX* );
+    NodeX(int id, double value);
+
+    ~NodeX();
+
+    void add_edge(NodeX *other_node, double edge_label, int graph_type);
+
+    void remove_edge(NodeX *other_node, int graph_type);
+
+    friend ostream &operator<<(ostream &os, const NodeX &n);
+
+    int get_id() { return id; }
+
+    double get_label() { return label; }
+
+    tr1::unordered_map<int, void *>::iterator get_edges_iterator() { return edges.begin(); }
+
+    tr1::unordered_map<int, void *>::iterator get_edges_end_iterator() { return edges.end(); }
+
+    int get_edges_size() { return edges.size(); }
+
+    void *get_edge_for_dest_node(int dest_node_id);
+
+    bool is_it_connected_with_node_id(int node_id);
+
+    bool is_it_connected_with_node_id(int node_id, double label);
+
+    bool is_neighborhood_consistent(NodeX *node);
 };
 
 #endif /* NODEX_H_ */
