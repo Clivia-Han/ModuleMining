@@ -37,9 +37,15 @@ public:
     //load graph data
     bool parse_data(istream &data, tr1::unordered_map<string, void *> &edge_to_freq);
 
+    bool parse_data(istream &data, tr1::unordered_map<string, void *> &edge_to_freq, map<string, map<int, set<int>>> &edge_pairs);
+
     bool load_from_file(string file_name, tr1::unordered_map<string, void *> &edge_to_freq);
 
     bool load_from_string(string data, tr1::unordered_map<string, void *> &edge_to_freq);
+
+    bool load_from_file(string file_name, tr1::unordered_map<string, void *> &edge_to_freq, map<string, map<int, set<int>>> &edge_pairs);
+
+    bool load_from_string(string data, tr1::unordered_map<string, void *> &edge_to_freq, map<string, map<int, set<int>>> &edge_pairs);
 
     //add new node
     NodeX *add_node(int id, double label);
@@ -50,6 +56,8 @@ public:
     void add_edge(NodeX *src_node, NodeX *dest_node, double edge_label);
 
     void add_edge(int src_id, int dest_id, double edge_label, tr1::unordered_map<string, void *> &edge_to_freq);
+
+    void add_edge(int src_id, int dest_id, double edge_label, tr1::unordered_map<string, void *> &edge_to_freq, map<string, map<int, set<int>>> &freq_edge_pairs);
 
     //remove an edge
     void remove_edge(int id1, int id2);

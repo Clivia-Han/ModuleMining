@@ -47,6 +47,71 @@ bool check_current_status(GraphX *graph1, GraphX *graph2, vector<Set_Iterator *>
 }
 
 void insert_into_edge_freq(NodeX *src, int dest_node_id, double dest_node_label, double edge_label,
+                           tr1::unordered_map<string, void *> &edge_to_freq,
+                           map<string, map<int, set<int>>> &freq_edge_pairs, bool add_src_only) {
+    string key;
+    if (src->get_label() > dest_node_label) {
+        stringstream ss;
+        if (src->get_label() == dest_node_label)
+            ss << src->get_label() << dest_node_label << "," << edge_label << ",";
+        else
+            ss << src->get_label() << "," << dest_node_label << "," << edge_label << ",";
+        key = ss.str();
+    } else {
+        stringstream ss;
+        if (dest_node_label == src->get_label())
+            ss << dest_node_label << src->get_label() << "," << edge_label << ",";
+        else
+            ss << dest_node_label << "," << src->get_label() << "," << edge_label << ",";
+        key = ss.str();
+    }
+
+    tr1::unordered_map<string, void *>::iterator iter = edge_to_freq.find(key);
+    Pattern *pattern;
+    if (iter == edge_to_freq.end()) {
+        GraphX *graph = new GraphX();
+        NodeX *node1 = graph->add_node(0, src->get_label());
+        NodeX *node2 = graph->add_node(1, dest_node_label);
+        graph->add_edge(node1, node2, edge_label);
+        pattern = new Pattern(graph);
+        delete graph;
+
+        edge_to_freq[key] = pattern;
+
+        set<int> st1 = set<int>();
+        set<int> st2 = set<int>();
+        st1.insert(src->get_id());
+        st2.insert(dest_node_id);
+        map<int, set<int>> mp = map<int, set<int>>();
+        mp[dest_node_id] = st1;
+        mp[src->get_id()] = st2;
+        freq_edge_pairs[key] = mp;
+    } else {
+        if (freq_edge_pairs[key].find(src->get_id()) == freq_edge_pairs[key].end()) {
+            freq_edge_pairs[key][src->get_id()] = set<int>();
+            freq_edge_pairs[key][src->get_id()].insert(dest_node_id);
+        } else {
+            freq_edge_pairs[key][src->get_id()].insert(dest_node_id);
+        }
+        if (freq_edge_pairs[key].find(dest_node_id) == freq_edge_pairs[key].end()) {
+            freq_edge_pairs[key][dest_node_id] = set<int>();
+            freq_edge_pairs[key][dest_node_id].insert(src->get_id());
+        } else {
+            freq_edge_pairs[key][dest_node_id].insert(src->get_id());
+        }
+        pattern = (Pattern *) ((*iter).second);
+    }
+
+    if (pattern->get_graph()->get_node_with_id(0)->get_label() == src->get_label()) {
+        pattern->add_node(src->get_id(), 0);
+        if (!add_src_only) pattern->add_node(dest_node_id, 1);
+    } else {
+        pattern->add_node(src->get_id(), 1);
+        if (!add_src_only) pattern->add_node(dest_node_id, 0);
+    }
+}
+
+void insert_into_edge_freq(NodeX *src, int dest_node_id, double dest_node_label, double edge_label,
                            tr1::unordered_map<string, void *> &edge_to_freq, bool add_src_only) {
     string key;
     if (src->get_label() > dest_node_label) {
@@ -260,6 +325,34 @@ void GraphX::remove_node_ignore_edges(int node_id) {
     nodes.erase(node_id);
 }
 
+void GraphX::add_edge(int src_id, int dest_id, double edge_label, tr1::unordered_map<string, void *> &edge_to_freq, map<string, map<int, set<int>>> &freq_edge_pairs) {
+    if (CL.length() > 0)
+        CL.clear();
+
+    NodeX *src_node;
+    NodeX *dest_node;
+
+    tr1::unordered_map<int, NodeX *>::iterator iter = nodes.find(src_id);
+    if (iter != nodes.end())
+        src_node = iter->second;
+    else
+        return;
+
+    iter = nodes.find(dest_id);
+    if (iter != nodes.end())
+        dest_node = iter->second;
+    else
+        return;
+
+    this->add_edge(src_node, dest_node, edge_label);
+
+    insert_into_edge_freq(src_node, dest_id, dest_node->get_label(), edge_label, edge_to_freq, freq_edge_pairs, false);
+
+    if (this->type == 0) {
+        insert_into_edge_freq(dest_node, src_id, src_node->get_label(), edge_label, edge_to_freq, freq_edge_pairs, false);
+    }
+}
+
 void GraphX::add_edge(int src_id, int dest_id, double edge_label, tr1::unordered_map<string, void *> &edge_to_freq) {
     if (CL.length() > 0)
         CL.clear();
@@ -328,6 +421,119 @@ bool GraphX::load_from_string(string data, tr1::unordered_map<string, void *> &e
 
     if (!b)
         return false;
+
+    return true;
+}
+
+/**
+ * Load a graph file that has .lg format
+ * return true if loading is done correctly, otherwise false
+ */
+bool GraphX::load_from_file(string file_name, tr1::unordered_map<string, void *> &edge_to_freq, map<string, map<int, set<int>>> &edge_pairs) {
+    CL.clear();
+
+    cout << "Loading graph from file: " << file_name << endl;
+    ifstream file(file_name.c_str(), ios::in);
+    if (!file) {
+        cout << "While opening a file an error is encountered" << endl;
+        return false;
+    }
+
+    if (!parse_data(file, edge_to_freq, edge_pairs))
+        return false;
+
+    file.close();
+
+    return true;
+}
+
+/**
+ * load a graph from the given string. string should follow the .lg format
+ */
+bool GraphX::load_from_string(string data, tr1::unordered_map<string, void *> &edge_to_freq, map<string, map<int, set<int>>> &edge_pairs) {
+    CL.clear();
+
+    istringstream str(data);
+
+    bool b = parse_data(str, edge_to_freq, edge_pairs);
+
+    //destruct data in the 'edgeToFreq' structure
+    for (tr1::unordered_map<string, void *>::iterator iter = edge_to_freq.begin(); iter != edge_to_freq.end(); iter++) {
+        delete ((Pattern *) iter->second);
+    }
+    edge_to_freq.clear();
+
+    if (!b)
+        return false;
+
+    return true;
+}
+
+/**
+ * the graph loader parser
+ */
+bool GraphX::parse_data(istream &data, tr1::unordered_map<string, void *> &edge_to_freq, map<string, map<int, set<int>>> &edge_pairs) {
+    //read the first line
+    char temp_ch;
+    data >> temp_ch;
+    data >> temp_ch;
+    data >> temp_ch;
+
+    int num_edges_loaded = 0;
+
+    bool first_edge_met = false;
+    while (!data.eof()) {
+        char ch;
+        ch = '\0';
+        data >> ch;
+
+        //to add nodes
+        if (ch == 'v') {
+            int id;
+            double label;
+            data >> id;
+            data >> label;
+
+            this->add_node(id, label);
+        } else if (ch == 'e')//to add edges
+        {
+            if (!first_edge_met) {
+                first_edge_met = true;
+
+                if (freq > -1) {
+                    for (tr1::unordered_map<double, set<int> *>::iterator iter = this->nodes_by_label.begin();
+                         iter != nodes_by_label.end(); iter++) {
+                        if (iter->second->size() < freq) {
+                            //如果带某标签的节点在图中出现的次数小于阈值，也就意味着与带有该标签的节点相连的所有边都是不频繁的
+                            tr1::unordered_map<double, set<int> *>::iterator iter2 = this->nodes_by_label.find(
+                                    iter->first);
+                            if (iter2 == this->nodes_by_label.end()) {
+                                cout << "Error: isufnm44" << endl;
+                                exit(0);
+                            }
+                            //遍历所有带该标签的节点，iter2为其中的节点，忽略此节点与和此节点相连的边
+                            set<int> *nodes_to_remove = iter2->second;
+                            for (set<int>::iterator iter1 = nodes_to_remove->begin();
+                                 iter1 != nodes_to_remove->end();) {
+                                int nodeID = *iter1;
+                                iter1++;
+                                this->remove_node_ignore_edges(nodeID);
+                            }
+                        }
+                    }
+                }
+            }
+
+            int id1;
+            int id2;
+            double label;
+            data >> id1;
+            data >> id2;
+            data >> label;
+            this->add_edge(id1, id2, label, edge_to_freq);
+            num_edges_loaded++;
+        }
+    }
 
     return true;
 }

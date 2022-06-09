@@ -363,6 +363,173 @@ void MyMiner::start_mining(string file_name, int graph_type, int support, int gi
     print_result(delete_pattern_id);
 }
 
+/**
+ * start the mining process, given the filename (file base name for the partitions)
+ * , and the required support threshold
+ */
+void MyMiner::start_mining_module(string file_name, int graph_type, int support) {
+    this->support = support;
+
+    //load the graph
+    long long start = get_ms_of_day();
+    load_graph_with_pairs(file_name, graph_type, support, frequent_edges);
+
+    if (frequent_edges.get_size() == 0) {
+        cout << "No frequent patterns found! Exiting" << endl;
+        exit(0);
+    }
+
+    long long end = get_ms_of_day();
+    long long elapsed = end - start;
+
+    cout << "Loading took " << (elapsed / 1000) << " sec and " << (elapsed % 1000) << " ms" << endl;
+
+
+//    Settings::graphLoadingTime = elapsed;
+
+    CLMap *clmap = new CLMap();
+
+    clmap->add_all(&frequent_edges);
+
+    frequent_patterns.insert(frequent_patterns.begin() + 1, clmap);//frequent edges!
+
+    if (Settings::debug_msg) {
+        cout << "#frequent edges  = " << frequent_edges.get_size() << endl;
+        cout << "Frequent edges:" << endl;
+        frequent_edges.print();
+    }
+
+    for (auto &freq_edge_iter : freq_edge_pairs) {
+        int id0 = freq_edge_iter.first;
+        for (auto &other_iter : freq_edge_iter.second) {
+            int id1 = other_iter;
+            id_set = set<int>();
+            id_map = map<int, int>();
+            id_set.insert(id0);
+            id_set.insert(id1);
+            id_map[id0] = 0;
+            id_map[id1] = 1;
+            double el = graph->get_edge_label(id0, id1);
+            double nl0 = graph->get_node_with_id(id0)->get_label();
+            double nl1 = graph->get_node_with_id(id1)->get_label();
+            GraphX *now_graph = new GraphX(1, graph_type);
+//            GraphX *pre_graph = new GraphX(now_graph);
+            now_graph->add_node(0, nl0);
+            now_graph->add_node(1, nl1);
+            now_graph->add_edge(0, 1, el);
+            for (auto &old_id : id_set) {
+                for (auto &new_id: freq_edge_pairs[old_id]) {
+                    if (id_set.find(new_id) != id_set.end()) {
+                        continue;
+                    }
+                    DFS(old_id, new_id);
+                    for (auto &pid : id_set) {
+                        if (freq_edge_pairs[pid].find(new_id) != freq_edge_pairs[pid].end()) {
+                            now_graph->remove_edge(id_map[new_id], id_map[pid]);
+                        }
+                    }
+                    id_set.erase(new_id);
+                    id_map.erase(new_id);
+                }
+            }
+//            while (true) {
+//                for (auto &old_id : id_set) {
+//                    for (auto &new_id : freq_edge_pairs[old_id]) {
+//                        if (id_set.find(new_id) != id_set.end()) {
+//                            continue;
+//                        }
+//                        pre_graph = new GraphX(now_graph);
+//                        id_set.insert(new_id);
+//                        id_map[new_id] = int(id_set.size()-1);
+//                        double new_nl = graph->get_node_with_id(new_id)->get_label();
+//                        double new_el = graph->get_edge_label(old_id, new_id);
+//                        now_graph->add_node(int(id_set.size()-1), new_nl);
+//                        now_graph->add_edge(id_map[old_id], id_map[new_id], new_el);
+//                        for (auto &pre_id : id_set) {
+//                            if (pre_id != old_id && freq_edge_pairs[pre_id].find(new_id) != freq_edge_pairs[pre_id].end()) {
+//                                double other_el = graph->get_edge_label(pre_id, new_id);
+//                                now_graph->add_edge(id_map[pre_id], id_map[new_id], other_el);
+//                            }
+//                        }
+//                        domains_solutions.clear();
+//                        auto *new_candidate = new Pattern(now_graph, false);
+//                        int freq = GraMiCounter::is_frequent(graph, new_candidate, support, -1, domains_solutions);
+//                        if (freq >= support) {
+//                            if ((frequent_patterns.size() - 1) < new_candidate->get_size()) {
+//                                frequent_patterns.insert(frequent_patterns.begin() + new_candidate->get_size(), new CLMap());
+//                            }
+//                            frequent_patterns[new_candidate->get_size()]->add_pattern(new_candidate);
+//                            frequent_pattern_vec.emplace_back(new_candidate);
+//                            frequent_patterns_domain[frequent_pattern_vec.size() - 1] = domains_solutions;
+//                        }
+//                        else {
+//                            delete now_graph;
+//                            now_graph = new GraphX(pre_graph);
+//                            id_set.erase(new_id);
+//                            id_map.erase(new_id);
+//                        }
+//                    }
+//                }
+//            }
+        }
+    }
+
+    print_result();
+}
+
+void MyMiner::DFS(int old_id, int new_id) {
+    id_set.insert(new_id);
+    id_map[new_id] = int(id_set.size()-1);
+    double new_nl = graph->get_node_with_id(new_id)->get_label();
+    double new_el = graph->get_edge_label(old_id, new_id);
+    now_graph->add_node(int(id_set.size()-1), new_nl);
+    now_graph->add_edge(id_map[old_id], id_map[new_id], new_el);
+    for (auto &pre_id : id_set) {
+        if (pre_id != old_id && freq_edge_pairs[pre_id].find(new_id) != freq_edge_pairs[pre_id].end()) {
+            double other_el = graph->get_edge_label(pre_id, new_id);
+            now_graph->add_edge(id_map[pre_id], id_map[new_id], other_el);
+        }
+    }
+    domains_solutions.clear();
+    auto *new_candidate = new Pattern(now_graph, false);
+    int freq = GraMiCounter::is_frequent(graph, new_candidate, support, -1, domains_solutions);
+    if (freq < support) {
+        for (auto &pre_id : id_set) {
+            if (freq_edge_pairs[pre_id].find(new_id) != freq_edge_pairs[pre_id].end()) {
+                now_graph->remove_edge(id_map[new_id], id_map[pre_id]);
+            }
+        }
+//        now_graph->remove_node_ignore_edges();
+        id_set.erase(new_id);
+        id_map.erase(new_id);
+        return;
+    }
+    else {
+        if ((frequent_patterns.size() - 1) < new_candidate->get_size()) {
+            frequent_patterns.insert(frequent_patterns.begin() + new_candidate->get_size(), new CLMap());
+        }
+        frequent_patterns[new_candidate->get_size()]->add_pattern(new_candidate);
+        frequent_pattern_vec.emplace_back(new_candidate);
+        frequent_patterns_domain[int(frequent_pattern_vec.size() - 1)] = domains_solutions;
+
+        for (auto &pre_id : id_set) {
+            for (auto &next_id: freq_edge_pairs[pre_id]) {
+                if (id_set.find(next_id) != id_set.end()) {
+                    continue;
+                }
+                DFS(pre_id, next_id);
+                for (auto &pid : id_set) {
+                    if (freq_edge_pairs[pid].find(next_id) != freq_edge_pairs[pid].end()) {
+                        now_graph->remove_edge(id_map[next_id], id_map[pid]);
+                    }
+                }
+                id_set.erase(next_id);
+                id_map.erase(next_id);
+            }
+        }
+    }
+}
+
 char *MyMiner::pop_my_candidate(vector<CLMap *> &candidates, map<int, Pattern *> &currently_checking, int support,
                                 double approximate) {
     if (Settings::debug_msg)
@@ -525,6 +692,27 @@ void MyMiner::print_result(tr1::unordered_set<int> delete_pattern_id) {
         }
         cout << endl;
         cout << "*****frequent pattern " << cnt << "*****" << endl;
+        cout << *(frequent_pattern_vec[cnt]->get_graph()) << endl;
+        auto now_domain = frequent_patterns_domain[cnt];
+        for (auto &map_iter: now_domain) {
+            cout << "domain: " << map_iter.first << endl;
+            cout << "values: " << endl;
+            set<int> st = map_iter.second;
+            for (auto &value_iter: st) {
+                cout << value_iter << endl;
+            }
+        }
+        cout << "**************************" << endl;
+        cnt++;
+    }
+}
+
+void MyMiner::print_result() {
+    cout << "print final result!";
+    int cnt = 0;
+    for (auto &pattern: frequent_pattern_vec) {
+        cout << endl;
+        cout << "*****frequent pattern: " << cnt << "*****" << endl;
         cout << *(frequent_pattern_vec[cnt]->get_graph()) << endl;
         auto now_domain = frequent_patterns_domain[cnt];
         for (auto &map_iter: now_domain) {

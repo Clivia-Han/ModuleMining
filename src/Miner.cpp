@@ -66,6 +66,59 @@ void Miner::load_graph(string base_name, int graph_type, int support, CLMap &fre
     cout << " data loaded successfully!" << endl;
 }
 
+void Miner::load_graph_with_pairs(string base_name, int graph_type, int support, CLMap &freq_edges) {
+    this->support = support;
+
+    tr1::unordered_map<string, void *> all_mps;
+    map<string, map<int, set<int>>> edge_pairs;
+
+    int nodes_counter = 0;
+
+    //load graph data
+    std::stringstream ss;
+    ss << base_name;
+    string part_file_name = ss.str();
+    graph = new GraphX(1, graph_type);//create a graph with id=its partition id
+    graph->set_frequency(support);
+    cout << "Master: created a graph object" << endl;
+    if (!graph->load_from_file(part_file_name, all_mps, edge_pairs)) {
+        cout << "Master: delete a graph object" << endl;
+        delete graph;
+    }
+    nodes_counter += graph->get_num_of_nodes();
+
+    cout << "Master: loop starts" << endl;
+    //遍历所有边，将频繁边加入freqEdges
+    for (tr1::unordered_map<string, void *>::iterator iter = all_mps.begin(); iter != all_mps.end(); ++iter) {
+        if (((Pattern *) ((*iter).second))->get_frequency() >= support) {
+            Pattern *p = (Pattern *) ((*iter).second);
+            cout << *(p->get_graph()) << endl;
+            freq_edges.add_pattern(p);
+
+            string key = iter->first;
+
+            for (auto &edge_pair : edge_pairs[key]) {
+                if (freq_edge_pairs.find(edge_pair.first) == freq_edge_pairs.end()) {
+                    freq_edge_pairs[edge_pair.first] = set<int>();
+                }
+                for (auto &x : edge_pair.second) {
+                    freq_edge_pairs[edge_pair.first].insert(x);
+                }
+            }
+//            freq_pattern_pairs[key] = freq_edge_pairs;
+
+            frequent_pattern_vec.push_back(p);
+            frequent_patterns_domain.insert(std::pair<int, map<int, set<int>>>(frequent_pattern_vec.size() - 1,
+                                                                               p->get_domain_values()));
+        } else
+            delete (Pattern *) ((*iter).second);
+    }
+    edge_pairs.clear();
+    cout << "Master: loop finishes" << endl;
+
+    cout << " data loaded successfully!" << endl;
+}
+
 void Miner::extend_freq_edges() {
     CLMap *two_edges_candidate = new CLMap();
     candidates.insert(candidates.begin() + 2, two_edges_candidate);
