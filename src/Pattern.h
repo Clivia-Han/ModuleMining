@@ -130,7 +130,7 @@ public:
 
     void set_invalid_col(int inv_c, int p_valids);
 
-    void borrow_time_infor(Pattern *other_pattern, int n_workers);
+//    void borrow_time_infor(Pattern *other_pattern, int n_workers);
 
     unsigned long get_predicted_time() { return this->predicted_time; }
 

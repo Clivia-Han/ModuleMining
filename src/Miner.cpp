@@ -66,7 +66,7 @@ void Miner::load_graph(string base_name, int graph_type, int support, CLMap &fre
     cout << " data loaded successfully!" << endl;
 }
 
-void Miner::load_graph_with_pairs(string base_name, int graph_type, int support, CLMap &freq_edges) {
+void Miner::load_graph_with_pairs(string base_name, int graph_type, int support, CLMap &freq_edges, int seed_node_id) {
     this->support = support;
 
     tr1::unordered_map<string, void *> all_mps;
@@ -96,20 +96,32 @@ void Miner::load_graph_with_pairs(string base_name, int graph_type, int support,
             freq_edges.add_pattern(p);
 
             string key = iter->first;
+            bool flag = false;
 
             for (auto &edge_pair : edge_pairs[key]) {
+                if (edge_pair.first == seed_node_id && !flag)
+                    flag = true;
                 if (freq_edge_pairs.find(edge_pair.first) == freq_edge_pairs.end()) {
                     freq_edge_pairs[edge_pair.first] = set<int>();
                 }
                 for (auto &x : edge_pair.second) {
+                    if (x == seed_node_id && !flag)
+                        flag = true;
                     freq_edge_pairs[edge_pair.first].insert(x);
                 }
             }
-//            freq_pattern_pairs[key] = freq_edge_pairs;
 
-            frequent_pattern_vec.push_back(p);
-            frequent_patterns_domain.insert(std::pair<int, map<int, set<int>>>(frequent_pattern_vec.size() - 1,
-                                                                               p->get_domain_values()));
+            string now_cl = p->get_graph()->get_canonical_label();
+
+//            freq_pattern_pairs[key] = freq_edge_pairs;
+            if (cl_set.count(now_cl) == 0) {
+                if (seed_node_id != -1 && !flag)
+                    continue;
+                cl_set.insert(now_cl);
+                frequent_pattern_vec.push_back(p);
+                frequent_patterns_domain.insert(std::pair<int, map<int, set<int>>>(frequent_pattern_vec.size() - 1,
+                                                                                   p->get_domain_values()));
+            }
         } else
             delete (Pattern *) ((*iter).second);
     }

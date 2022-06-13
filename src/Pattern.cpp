@@ -248,28 +248,28 @@ map<int, set<int>> Pattern::get_domain_values() {
     return domain_nodes;
 }
 
-void Pattern::borrow_time_infor(Pattern *other_pattern, int n_workers) {
-    //in case we already set subtaskingfixed, then there is no need to borrow information, because it was set earlier
-    if (this->subtasking_fixed > 1)
-        return;
-
-    if (Settings::debug_msg) {
-        cout << "Pattern#" << this->get_id() << " is borrowing time information from Pattern#"
-             << other_pattern->get_id() << "this.Subtasking = " << subtasking_fixed << ", other.subtasking = "
-             << other_pattern->get_subtasking_value_fixed() << endl;
-        cout << "Borrowed predicted time is: " << other_pattern->get_predicted_time() << endl;
-    }
-
-    this->predicted_time = other_pattern->get_predicted_time();
-    this->set_subtasking(other_pattern->get_subtasking_value_fixed(), n_workers);
-    this->set_invalid_col(other_pattern->get_invalid_col(), other_pattern->get_predicted_valids());
-
-    this->result_exact = other_pattern->is_result_exact();
-    if (result_exact)
-        this->frequency = other_pattern->get_frequency();
-
-    this->set_max_iters(other_pattern->get_max_iters());
-}
+//void Pattern::borrow_time_infor(Pattern *other_pattern, int n_workers) {
+//    //in case we already set subtaskingfixed, then there is no need to borrow information, because it was set earlier
+//    if (this->subtasking_fixed > 1)
+//        return;
+//
+//    if (Settings::debug_msg) {
+//        cout << "Pattern#" << this->get_id() << " is borrowing time information from Pattern#"
+//             << other_pattern->get_id() << "this.Subtasking = " << subtasking_fixed << ", other.subtasking = "
+//             << other_pattern->get_subtasking_value_fixed() << endl;
+//        cout << "Borrowed predicted time is: " << other_pattern->get_predicted_time() << endl;
+//    }
+//
+//    this->predicted_time = other_pattern->get_predicted_time();
+//    this->set_subtasking(other_pattern->get_subtasking_value_fixed(), n_workers);
+//    this->set_invalid_col(other_pattern->get_invalid_col(), other_pattern->get_predicted_valids());
+//
+//    this->result_exact = other_pattern->is_result_exact();
+//    if (result_exact)
+//        this->frequency = other_pattern->get_frequency();
+//
+//    this->set_max_iters(other_pattern->get_max_iters());
+//}
 
 void Pattern::add_node(int node_id, int pattern_node_id) {
     occurences[pattern_node_id]->insert(node_id);

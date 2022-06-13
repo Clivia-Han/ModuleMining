@@ -17,7 +17,8 @@ public:
 
     static int fixed_num_subtasks;
     static double min_imbalance;
-    static int given_type;
+    static int given_flag;
+    static int given_seed_node_id;
 };
 
 #endif /* SETTINGS_H_ */

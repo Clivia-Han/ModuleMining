@@ -530,7 +530,7 @@ bool GraphX::parse_data(istream &data, tr1::unordered_map<string, void *> &edge_
             data >> id1;
             data >> id2;
             data >> label;
-            this->add_edge(id1, id2, label, edge_to_freq);
+            this->add_edge(id1, id2, label, edge_to_freq, edge_pairs);
             num_edges_loaded++;
         }
     }

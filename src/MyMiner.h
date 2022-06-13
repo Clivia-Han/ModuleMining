@@ -22,7 +22,7 @@ public:
 
     void start_mining(string file_name, int graph_type, int support, int given_type);
 
-    void start_mining_module(string file_name, int graph_type, int support);
+    void start_mining_module(string file_name, int graph_type, int support, int seed_node_id);
 
     void set_input_graph(GraphX *g) { this->graph = g; }
 
@@ -34,7 +34,7 @@ public:
 
     void print_result(tr1::unordered_set<int> delete_pattern_id);
 
-    void print_result();
+    void print_frequent_module();
 
     char *
     pop_my_candidate(vector<CLMap *> &candidates, map<int, Pattern *> &currently_checking, int support,

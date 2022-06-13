@@ -28,6 +28,7 @@ protected:
     map<string, map<int, set<int>>> freq_pattern_pairs;
     map<int, set<int>> freq_edge_pairs;
     map<string, long long> is_freqtimes;
+    set<string> cl_set;
 
     //frequent patterns sorted in a vector, nth element in the vector is hash map of all patterns having n edges
     //each hashmap is keyed by the canonical form of the value graph (pattern)
@@ -54,9 +55,9 @@ public:
 
     void load_graph(string base_name, int graph_type, int support, CLMap &freq_edges);
 
-    void load_graph_with_pairs(string base_name, int graph_type, int support, CLMap &freq_edges);
+    void load_graph_with_pairs(string base_name, int graph_type, int support, CLMap &freq_edges, int seed_node_id);
 
-//    void print_result();
+    void print_result();
 
     void print_candidates();
 

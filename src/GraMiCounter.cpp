@@ -151,8 +151,8 @@ int GraMiCounter::is_frequent(GraphX *graph, Pattern *pattern, int support, doub
         // current_domain is the domain corresponding to the subgraph node currently being processed
         tr1::unordered_set<int> *current_domain = domains_values.find(domain_id)->second;
 
-        if (Settings::debug_msg)
-            cout << "old current_domain size:" << current_domain->size() << endl;
+        //if (Settings::debug_msg)
+        //    cout << "old current_domain size:" << current_domain->size() << endl;
 
         if (approximate != -1) {
             map<int, int> id_map;
@@ -176,8 +176,8 @@ int GraMiCounter::is_frequent(GraphX *graph, Pattern *pattern, int support, doub
             }
         }
 
-        if (Settings::debug_msg)
-            cout << "new current_domain size:" << current_domain->size() << endl;
+        //if (Settings::debug_msg)
+        //    cout << "new current_domain size:" << current_domain->size() << endl;
 
         int counter = 0;
         for (tr1::unordered_set<int>::iterator iter = current_domain->begin(); iter != current_domain->end(); ++iter) {
@@ -242,9 +242,9 @@ int GraMiCounter::is_frequent(GraphX *graph, Pattern *pattern, int support, doub
             }
             if (approximate == -1) {
                 if (domains_solutions[domain_id].size() >= support) {
-                    if (Settings::debug_msg)
-                        for (auto domain_solution: domains_solutions)
-                            cout << domain_solution.second.size() << endl;
+                    //if (Settings::debug_msg)
+                    //    for (auto domain_solution: domains_solutions)
+                    //        cout << domain_solution.second.size() << endl;
                     delete_results(result);
                     break;
                 }
@@ -270,16 +270,16 @@ int GraMiCounter::is_frequent(GraphX *graph, Pattern *pattern, int support, doub
         }
     }
 
-    if (Settings::debug_msg) {
-        cout << *pattern->get_graph();
-        for (auto &domains_solution: domains_solutions) {
-            cout << "domain ID: " << domains_solution.first << "domain size: " << domains_solution.second.size()
-                 << endl;
-            for (auto &value_iter: domains_solution.second) {
-                cout << "value ID: " << value_iter << endl;
-            }
-        }
-    }
+    //if (Settings::debug_msg) {
+    //    cout << *pattern->get_graph();
+    //    for (auto &domains_solution: domains_solutions) {
+    //        cout << "domain ID: " << domains_solution.first << "domain size: " << domains_solution.second.size()
+    //             << endl;
+    //        for (auto &value_iter: domains_solution.second) {
+    //            cout << "value ID: " << value_iter << endl;
+    //        }
+    //    }
+    //}
 
     //delete the domains
     for (auto &domains_value: domains_values) {
