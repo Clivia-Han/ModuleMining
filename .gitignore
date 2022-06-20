@@ -1,0 +1,10 @@
+/.vs
+/bin
+/cmake-build-debug
+/cmake-build-release
+/Datasets
+/output_data
+/pic
+/pre_data
+graph.data
+test.log

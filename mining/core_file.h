@@ -1,0 +1,21 @@
+#pragma once
+
+#include <map>
+#include <set>
+#include <list>
+#include <cmath>
+#include <ctime>
+#include <vector>
+#include <string>
+#include <cstdio>
+#include <limits>
+#include <cstring>
+#include <cstdlib>
+#include <sstream>
+#include <fstream>
+#include <iomanip>
+#include <unistd.h>
+#include <iostream>
+#include <algorithm>
+#include <tr1/unordered_map>
+#include <tr1/unordered_set>
