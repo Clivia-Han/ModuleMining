@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util.hpp"
+#include "util.cpp"
 
 #include "Log.hpp"
 #include "Trie.hpp"
@@ -40,7 +40,7 @@ public:
             iss >> module_name_ >> cell_name >> cell_type >> cell_port >> dir;
             std::getline(iss, signal);
             // erase space
-            signal.erase(std::remove_if(signal.begin(), signal.end(), isspace), signal.end());
+            signal.erase(remove_if(signal.begin(), signal.end(), isspace), signal.end());
             if (cell_type == "-") {
                 continue;
             }
@@ -256,19 +256,19 @@ public:
             int new_edge_id = edges.size();
             std::string hie_sig = rep_full_name + "-" + all_sub_sig_map[sub_edge.signal_name_];
             int new_sig_id = signal_trie_.insert(hie_sig).first;
-            edges.push_back({new_sig_id, sub_node_map[sub_edge.source_], sub_attr_map[sub_edge.source_port_], 
-                            sub_node_map[sub_edge.target_], sub_attr_map[sub_edge.target_port_], {}});
+            edges.push_back({new_sig_id, sub_node_map[sub_edge.source_], sub_attr_map[sub_edge.source_port_],
+                             sub_node_map[sub_edge.target_], sub_attr_map[sub_edge.target_port_], {}});
             for (auto item : sub_edge.attributes_) {
                 edges.back().attributes_.push_back(sub_attr_map[item]);
             }
             aft_edges.push_back(new_edge_id);
             if (sub.np_signal_order_.count(sub_edge.source_)) {
-                np_signal_order_[sub_node_map[sub_edge.source_]][sub_attr_map[sub_edge.source_port_]][new_sig_id] = 
-                    sub.np_signal_order_[sub_edge.source_][sub_edge.source_port_][sub_edge.signal_name_];
+                np_signal_order_[sub_node_map[sub_edge.source_]][sub_attr_map[sub_edge.source_port_]][new_sig_id] =
+                        sub.np_signal_order_[sub_edge.source_][sub_edge.source_port_][sub_edge.signal_name_];
             }
             if (sub.np_signal_order_.count(sub_edge.target_)) {
-                np_signal_order_[sub_node_map[sub_edge.target_]][sub_attr_map[sub_edge.target_port_]][new_sig_id] = 
-                    sub.np_signal_order_[sub_edge.target_][sub_edge.target_port_][sub_edge.signal_name_];
+                np_signal_order_[sub_node_map[sub_edge.target_]][sub_attr_map[sub_edge.target_port_]][new_sig_id] =
+                        sub.np_signal_order_[sub_edge.target_][sub_edge.target_port_][sub_edge.signal_name_];
             }
         }
         // get bef_nodes & bef_edges
@@ -293,8 +293,8 @@ public:
                     int new_edge_id = (int) edges.size();
                     std::string hie_sig = rep_full_name + "-" + all_sub_sig_map[sub_edge.signal_name_];
                     int new_sig_id = signal_trie_.insert(hie_sig).first;
-                    edges.push_back({new_sig_id, sub_node_map[sub_edge.source_], sub_attr_map[sub_edge.source_port_], 
-                                    edge.target_, edge.target_port_, edge.attributes_});
+                    edges.push_back({new_sig_id, sub_node_map[sub_edge.source_], sub_attr_map[sub_edge.source_port_],
+                                     edge.target_, edge.target_port_, edge.attributes_});
                     aft_edges.push_back(new_edge_id);
                 };
                 if (np_signal_order_[replace_node_id][edge.source_port_].size() != sub_sig_order_map[sub_node_id].size()) {
@@ -314,7 +314,7 @@ public:
                     int new_sig_id = signal_trie_.insert(hie_sig).first;
                     int new_edge_id = (int) edges.size();
                     edges.push_back({new_sig_id, node_map[edge.source_], edge.source_port_,
-                                    sub_node_map[sub_edge.target_], sub_attr_map[sub_edge.target_port_], edge.attributes_});
+                                     sub_node_map[sub_edge.target_], sub_attr_map[sub_edge.target_port_], edge.attributes_});
                     aft_edges.push_back(new_edge_id);
                 };
                 if (np_signal_order_[replace_node_id][edge.target_port_].size() != sub_sig_order_map[sub_node_id].size()) {
@@ -362,16 +362,16 @@ public:
             if (source_in && target_in) continue;
             if (source_in) {
                 int new_edge_id = (int) edges.size();
-                edges.push_back({edge.signal_name_, shink_node_id, edge.source_port_, 
-                                edge.target_, edge.target_port_, edge.attributes_});
+                edges.push_back({edge.signal_name_, shink_node_id, edge.source_port_,
+                                 edge.target_, edge.target_port_, edge.attributes_});
                 aft_edges.push_back(new_edge_id);
                 // TODO: port merge rule unknow
                 int ptr = (int) np_signal_order_[shink_node_id][edge.source_port_].size();
                 np_signal_order_[shink_node_id][edge.source_port_][edge.signal_name_] = ptr;
             } else if (target_in) {
                 int new_edge_id = (int) edges.size();
-                edges.push_back({edge.signal_name_, node_map[edge.source_], edge.source_port_, 
-                                shink_node_id, edge.target_port_, edge.attributes_});
+                edges.push_back({edge.signal_name_, node_map[edge.source_], edge.source_port_,
+                                 shink_node_id, edge.target_port_, edge.attributes_});
                 aft_edges.push_back(new_edge_id);
                 // TODO: port merge rule unknow
                 int ptr = (int) np_signal_order_[shink_node_id][edge.target_port_].size();
@@ -383,8 +383,8 @@ public:
         return true;
     }
 
-    void update_graph(const std::pair<std::vector<int>, std::vector<int>> &bef, 
-                    const std::pair<std::vector<int>, std::vector<int>> &aft) {
+    void update_graph(const std::pair<std::vector<int>, std::vector<int>> &bef,
+                      const std::pair<std::vector<int>, std::vector<int>> &aft) {
         // update now_graph_ & hid_graph_
         for (auto node_id : bef.first) {
             now_graph_.node_id_set.erase(node_id);
@@ -429,7 +429,7 @@ public:
                     logs_.data_.push_back({REPLACE, log.aft_, log.bef_});
                 }
             }
-            
+
         }
         return true;
     }
@@ -645,19 +645,6 @@ public:
         out << "  </graph>\n"
             << "</graphml>\n";
         return true;
-    }
-
-    std::string generate_label(std::vector<int> attributes) {
-        std::string label = "";
-        bool meet = false;
-        for (int &attr : attributes) {
-            if(!meet)
-                meet = true;
-            else
-                label += "_";
-            label += std::to_string(attr);
-        }
-        return label;
     }
 
     uint64_t size() {

@@ -1,6 +1,9 @@
 #pragma once
 
+#include "MyMiner.h"
+#include "Settings.h"
 #include "System.hpp"
+#include "mining_utils.h"
 
 typedef uint64_t hash_t;
 constexpr hash_t prime = 0x100000001B3ull;
@@ -27,22 +30,28 @@ struct UI {
     void print_cmd_lsit() {
         std::cout << "cmd list: \n";
         std::cout << std::setw(28) << std::setiosflags(std::ios::left)
-                << "--help" << ": print cmd list\n";
+                  << "--help" << ": print cmd list\n";
         std::cout << std::setw(28) << std::setiosflags(std::ios::left)
-                << "-l <folder_path>" << ": load data\n";
+                  << "-l <folder_path>" << ": load data\n";
         std::cout << std::setw(28) << std::setiosflags(std::ios::left)
-                << "-x <file_path>" << ": save for networkx\n";
+                  << "-x <file_path>" << ": save for networkx\n";
         std::cout << std::setw(28) << std::setiosflags(std::ios::left)
-                << "-s <folder_path>" << ": store data\n";
+                  << "-s <folder_path>" << ": store data\n";
         std::cout << std::setw(28) << std::setiosflags(std::ios::left)
-                << "-q <folder_path>" << ": quit and store data\n";
+                  << "-q <folder_path>" << ": quit and store data\n";
+        std::cout << std::setw(28) << std::setiosflags(std::ios::left)
+                  << "-m <folder_path> <support>, <graph_type>, "
+                  << "<max_edges_num>, <max_nodes_num>, <debug_msg>, "
+                  << "<given_seed_node_id>, <use_predicted_inv_column>, "
+                  << "<throw_nodes_after_iterations>, <postpone_nodes_after_iterations>"
+                  << ": mining frequent module\n";
         // TODO:
         std::cout << std::setw(28) << std::setiosflags(std::ios::left)
-                << "-f <string>" << ": filter attribute\n";
+                  << "-f <string>" << ": filter attribute\n";
         std::cout << std::setw(28) << std::setiosflags(std::ios::left)
-                << "-u <string>" << ": query attribute\n";
+                  << "-u <string>" << ": query attribute\n";
         std::cout << std::setw(28) << std::setiosflags(std::ios::left)
-                << "-r <file_path1> <file_path2>" << ": replace\n";
+                  << "-r <file_path1> <file_path2>" << ": replace\n";
         std::cout << std::setw(28) << std::setiosflags(std::ios::left)
                   << "-rollback" << ": roll back one replace operation through log\n";
         std::cout << '\n';
@@ -54,7 +63,15 @@ struct UI {
         while (true) {
             std::cout << "please input your cmd:";
             std::string cmd, path, path2;
+            std::string comm_line;
+            std::vector<string_view> args;
             std::cin >> cmd;
+
+            MyMiner *miner = new MyMiner();
+            long long elapsed = 0;
+            long long start_time;
+            long long end_time;
+
             switch (hash_(cmd.c_str())) {
                 case "--help"_hash:
                     print_cmd_lsit();
@@ -66,6 +83,51 @@ struct UI {
                     } else {
                         std::cout << "Error: store failed\n";
                     }
+                    break;
+                case "-m"_hash:
+                    Settings::support = 100;
+                    Settings::graph_type = 0;   //undirected graph
+                    Settings::max_edges_num = -1;
+                    Settings::max_nodes_num = -1;
+                    Settings::debug_msg = false;
+                    Settings::given_seed_node_id = -1;  //user-given seed node id
+                    Settings::path = "../output_data";
+                    Settings::use_predicted_inv_column = true;
+                    Settings::throw_nodes_after_iterations = false;
+                    Settings::postpone_nodes_after_iterations = 10000000;
+
+                    std::getline(std::cin, comm_line);
+                    args = split(string_view(comm_line), ' ');
+                    for (int i = 0; i < args.size(); i++) {
+                        if (i == 0) {
+                            Settings::path = args[i];
+                        } else if (i == 1) {
+                            Settings::support = stoi(std::string(args[i]));
+                        } else if (i == 2) {
+                            Settings::graph_type = stoi(std::string(args[i]));
+                        } else if (i == 3) {
+                            Settings::max_edges_num = stoi(std::string(args[i]));
+                        } else if (i == 4) {
+                            Settings::max_nodes_num = stoi(std::string(args[i]));
+                        } else if (i == 5) {
+                            Settings::debug_msg = std::string(args[i]) == "true";
+                        } else if (i == 6) {
+                            Settings::given_seed_node_id = stoi(std::string(args[i]));
+                        } else if (i == 7) {
+                            Settings::use_predicted_inv_column = std::string(args[i]) == "true";
+                        } else if (i == 8) {
+                            Settings::throw_nodes_after_iterations = std::string(args[i]) == "true";;
+                        } else if (i == 9) {
+                            Settings::postpone_nodes_after_iterations = stoi(std::string(args[i]));
+                        }
+                    }
+                    std::cout << "now start mining process" << std::endl;
+                    start_time = get_ms_of_day();
+                    miner->start_mining_module(sym, Settings::graph_type, Settings::support, Settings::given_seed_node_id, Settings::path);
+                    end_time = get_ms_of_day();
+                    elapsed = start_time - end_time;
+                    std::cout << "Mining took " << (elapsed / 1000) << " sec and " << (elapsed % 1000) << " ms" << std::endl;
+                    std::cout << "Finished!";
                     break;
                 case "-l"_hash:
                     std::cin >> path;
@@ -116,4 +178,3 @@ struct UI {
         }
     }
 };
-
