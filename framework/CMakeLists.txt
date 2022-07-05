@@ -14,5 +14,5 @@ set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g2 -ggdb")
 file(GLOB FRAM_SRC_LIST *)
 # message(STATUS "FRAM_SRC_LIST=${FRAM_SRC_LIST}")
 
-add_library(framework ${FRAM_SRC_LIST} get_mem.cpp)
+add_library(framework ${FRAM_SRC_LIST})
 set_target_properties(framework PROPERTIES LINKER_LANGUAGE CXX)

@@ -1,5 +1,5 @@
 #include "System.hpp"
-#include "get_mem.cpp"
+#include "util.hpp"
 
 int main() {
     std::string data_path = "../data/aes_core.v.table";
@@ -102,4 +102,4 @@ int main() {
 //        avg_time += time_cost_u(st, en);
 //    }
 //    std::cout << avg_time / epech << '\n';
-}yyy
+}

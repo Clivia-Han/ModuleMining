@@ -78,6 +78,7 @@ Pay attention: **you only need build once, and all executable files are in folde
     -s ../output_data
     -q ../output_data
     -m ../output_data 100 0 -1 -1 false -1 true false 10000000
+    -m ../output_data 100 0 -1 -1 true -1 true true 100
     ...
     ```
   Pay attention: **after run this project, you always need to use `-l` to get data from disks fist**.

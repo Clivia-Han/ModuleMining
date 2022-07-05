@@ -160,8 +160,8 @@ bool update_pipo(const std::string &out_folder) {
                 for (auto &[str, vec] : pios) {
                     if (str == sig_view) {
                         vec.push_back(sig_view);
-                    } else if (str.size() < sig_view.size() && sig_view.at(str.size()) == '[' 
-                            && str == sig_view.substr(0, str.size())) {
+                    } else if (str.size() < sig_view.size() && sig_view.at(str.size()) == '['
+                               && str == sig_view.substr(0, str.size())) {
                         vec.push_back(sig_view);
                     }
                 }
@@ -247,15 +247,15 @@ bool parse(const std::string &out_folder, bool parallel = true) {
             for (auto node_id : sym.now_graph_.node_id_set) {
                 const auto node_type = sym.attribute_trie_.find_idx(sym.node_ref(node_id).type_);
                 auto which = [&](std::string match_str) {
-                for (auto i : range(module_names.size())) {
-                    if (match_str == module_names[i]) {
-                        return i;
+                    for (auto i : range(module_names.size())) {
+                        if (match_str == module_names[i]) {
+                            return i;
+                        }
                     }
-                }
-                return -1;
+                    return -1;
                 }(node_type);
                 if (which == -1) continue;
-                
+
                 if (sym.replace(node_id, syms[which])) {
                     std::cout << "    replace node_id:" << node_id << " with module:" << module_names[which] << " success\n";
                 } else {
@@ -293,7 +293,7 @@ int main(int argc, char **argv) {
     std::filesystem::path p(out_folder);
     if (std::filesystem::exists(p)) std::filesystem::remove_all(p);
     std::filesystem::create_directories(p);
-    
+
     if (creat_topo(data, out_folder)) {
         std::cout << "create topo success\n";
     } else {

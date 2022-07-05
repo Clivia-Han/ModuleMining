@@ -3,7 +3,7 @@
 #include <utility>
 
 #include "core.h"
-#include "util.cpp"
+#include "util.hpp"
 
 enum {
     REPLACE = 0,
@@ -19,25 +19,26 @@ public:
         res += aft_.second.size() * sizeof(int);
         return res;
     }
+
+    friend std::ostream & operator << (std::ostream &out, Log &log) {
+        out << log.type_ << ' ';
+        out << log.bef_.first << ' ' << log.bef_.second << ' ';
+        out << log.aft_.first << ' ' << log.aft_.second;
+        return out;
+    }
+
+    friend std::istream & operator >> (std::istream &in, Log &log) {
+        in >> log.type_;
+        in >> log.bef_.first >> log.bef_.first;
+        in >> log.aft_.first >> log.aft_.second;
+        return in;
+    }
+
 // private:
     int type_;
     std::pair<std::vector<int>, std::vector<int>> bef_; // before nodes & edges
     std::pair<std::vector<int>, std::vector<int>> aft_; // after nodes & edges
 };
-
-std::ostream & operator << (std::ostream &out, Log &log) {
-    out << log.type_ << ' ';
-    out << log.bef_.first << ' ' << log.bef_.second << ' ';
-    out << log.aft_.first << ' ' << log.aft_.second;
-    return out;
-}
-
-std::istream & operator >> (std::istream &in, Log &log) {
-    in >> log.type_;
-    in >> log.bef_.first >> log.bef_.first;
-    in >> log.aft_.first >> log.aft_.second;
-    return in;
-}
 
 struct Logs {
     std::vector<Log> data_;

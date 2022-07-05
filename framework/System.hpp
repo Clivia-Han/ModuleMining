@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util.cpp"
+#include "util.hpp"
 
 #include "Log.hpp"
 #include "Trie.hpp"
@@ -40,7 +40,7 @@ public:
             iss >> module_name_ >> cell_name >> cell_type >> cell_port >> dir;
             std::getline(iss, signal);
             // erase space
-            signal.erase(remove_if(signal.begin(), signal.end(), isspace), signal.end());
+            signal.erase(std::remove_if(signal.begin(), signal.end(), isspace), signal.end());
             if (cell_type == "-") {
                 continue;
             }
@@ -645,6 +645,19 @@ public:
         out << "  </graph>\n"
             << "</graphml>\n";
         return true;
+    }
+
+    std::string generate_label(std::vector<int> attributes) {
+        std::string label = "";
+        bool meet = false;
+        for (int &attr : attributes) {
+            if(!meet)
+                meet = true;
+            else
+                label += "_";
+            label += std::to_string(attr);
+        }
+        return label;
     }
 
     uint64_t size() {

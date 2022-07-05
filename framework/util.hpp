@@ -68,17 +68,17 @@ private:
 };
 std::vector<string_view> split(string_view s, char dim);
 
-struct Iterator { 
-    int iter; 
+struct Iterator {
+    int iter;
     friend int operator*(const Iterator &self) { return self.iter; }
     friend Iterator &operator++(Iterator &self) { return self.iter++, self; }
     friend bool operator != (const Iterator &lhs, const Iterator &rhs) { return lhs.iter != rhs.iter; }
 };
 
-struct Range { 
-    Iterator begin() { return {0}; } 
-    Iterator end() { return {end_}; } 
-    int end_{}; 
+struct Range {
+    Iterator begin() { return {0}; }
+    Iterator end() { return {end_}; }
+    int end_{};
 };
 Range range(int end);
 

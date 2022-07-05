@@ -3,7 +3,19 @@
 #include "MyMiner.h"
 #include "Settings.h"
 #include "System.hpp"
+#include "core_file.h"
 #include "mining_utils.h"
+
+int Settings::support = 100;
+int Settings::graph_type = 0;   //undirected graph
+int Settings::max_edges_num = -1;
+int Settings::max_nodes_num = -1;
+bool Settings::debug_msg = false;
+int Settings::given_seed_node_id = -1;  //user-given seed node id
+std::string Settings::path = "../output_data";
+bool Settings::use_predicted_inv_column = true;
+bool Settings::throw_nodes_after_iterations = false;
+long Settings::postpone_nodes_after_iterations = 10000000;
 
 typedef uint64_t hash_t;
 constexpr hash_t prime = 0x100000001B3ull;
@@ -85,17 +97,8 @@ struct UI {
                     }
                     break;
                 case "-m"_hash:
-                    Settings::support = 100;
-                    Settings::graph_type = 0;   //undirected graph
-                    Settings::max_edges_num = -1;
-                    Settings::max_nodes_num = -1;
-                    Settings::debug_msg = false;
-                    Settings::given_seed_node_id = -1;  //user-given seed node id
-                    Settings::path = "../output_data";
-                    Settings::use_predicted_inv_column = true;
-                    Settings::throw_nodes_after_iterations = false;
-                    Settings::postpone_nodes_after_iterations = 10000000;
-
+                    sym.init_unpre("../pre_data/aes_core.v.table");
+                    sym.store("../output_data");
                     std::getline(std::cin, comm_line);
                     args = split(string_view(comm_line), ' ');
                     for (int i = 0; i < args.size(); i++) {
@@ -121,6 +124,16 @@ struct UI {
                             Settings::postpone_nodes_after_iterations = stoi(std::string(args[i]));
                         }
                     }
+                    std::cout << "Settings::path " << Settings::path << std::endl;
+                    std::cout << "Settings::support " << Settings::support << std::endl;
+                    std::cout << "Settings::graph_type " << Settings::graph_type << std::endl;
+                    std::cout << "Settings::max_edges_num " << Settings::max_edges_num << std::endl;
+                    std::cout << "Settings::max_nodes_num " << Settings::max_nodes_num << std::endl;
+                    std::cout << "Settings::debug_msg " << Settings::debug_msg << std::endl;
+                    std::cout << "Settings::given_seed_node_id " << Settings::given_seed_node_id << std::endl;
+                    std::cout << "Settings::use_predicted_inv_column " << Settings::use_predicted_inv_column << std::endl;
+                    std::cout << "Settings::throw_nodes_after_iterations " << Settings::throw_nodes_after_iterations << std::endl;
+                    std::cout << "Settings::postpone_nodes_after_iterations " << Settings::postpone_nodes_after_iterations << std::endl;
                     std::cout << "now start mining process" << std::endl;
                     start_time = get_ms_of_day();
                     miner->start_mining_module(sym, Settings::graph_type, Settings::support, Settings::given_seed_node_id, Settings::path);
