@@ -22,7 +22,7 @@ int get_pos(char *str, char c) {
 }
 
 //get time in milli seconds
-long long get_ms_of_day() {
+long long get_msec() {
     struct timeval tv;
     struct timezone tz;
     gettimeofday(&tv, &tz);

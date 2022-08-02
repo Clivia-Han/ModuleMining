@@ -6,18 +6,18 @@
 #include "Pattern.h"
 #include "core_file.h"
 
-class CLMap_Iterator {
+class SigMapIter {
 public:
     std::string key;
     Pattern *pattern;
     std::map<std::string, Pattern *>::iterator map_p_iter;
     std::map<std::string, std::list<Pattern *> *>::iterator map_v_iter;
-    std::list<Pattern *>::iterator vect_iter;
+    std::list<Pattern *>::iterator vec_iter;
 
-    CLMap_Iterator get_copy();
+    SigMapIter get_copy();
 };
 
-class CLMap {
+class SigMap {
 private:
     std::map<std::string, Pattern *> patterns_sig;
     std::map<std::string, std::list<Pattern *> *> patterns_nosig;
@@ -31,13 +31,13 @@ private:
     int size;
 
 public:
-    CLMap();
+    SigMap();
 
     bool add_pattern(Pattern *pattern);
 
     void remove_pattern(Pattern *pattern);
 
-    void add_all(CLMap *clmap);
+    void add_all(SigMap *sig_map);
 
     Pattern *get_pattern(Pattern *pattern);
 
@@ -45,12 +45,12 @@ public:
 
     void print(int counter = 1);
 
-    CLMap_Iterator get_first_element();
+    SigMapIter get_first_element();
 
-    void advance_iterator(CLMap_Iterator &current_iter);
+    void advance_iterator(SigMapIter &current_iter);
 
     void clear();
 
     void delete_objects();
 };
-void vect_map_destruct(std::vector<CLMap *> vm);
+void vect_map_destruct(std::vector<SigMap *> vm);

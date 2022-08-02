@@ -3,13 +3,15 @@ project(Kendinsky)
 
 set(CMAKE_CXX_STANDARD 17)
 
+find_package(OpenMP REQUIRED)
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Release" "Debug")
 endif()
 
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g2 -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -fopenmp -pthread")
+set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g2 -ggdb -fopenmp -pthread")
 
 include_directories(${CMAKE_CURRENT_LIST_DIR}/framework)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/mining)
@@ -32,7 +34,7 @@ add_executable(mining_test test/mining_test.cpp)
 target_link_libraries(mining_test mining framework)
 
 add_executable(pre pre_src/pre.cpp)
-target_link_libraries(pre pthread framework)
+target_link_libraries(pre framework)
 
 add_executable(main main.cpp)
-target_link_libraries(main mining framework)
+target_link_libraries(main framework)
