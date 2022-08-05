@@ -43,7 +43,7 @@ public:
 
     std::map<int, std::set<int>> domains_solutions;
 
-    void start_mining_module(System &sym, int support, int seed_node_id, const std::string& path);
+    void start_mining_module(System &sym, int support, int seed_node_id);
 
     void generate_now_graph(System &sym, int support, int seed_node_id);
 
@@ -58,4 +58,8 @@ public:
     void write_solutions(const std::string &path);
 
     void DFS(int old_id, int new_id);
+
+    void store_frequent_instance(const std::string &path);
+
+    void domain_dfs(int node_id, int graph_id, std::ofstream& out);
 };

@@ -21,7 +21,6 @@ int get_pos(char *str, char c) {
     return -1;
 }
 
-//get time in milli seconds
 long long get_msec() {
     struct timeval tv;
     struct timezone tz;

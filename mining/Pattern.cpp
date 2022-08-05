@@ -10,7 +10,7 @@
 
 int Pattern::max_pattern_id = 0;
 
-bool PrimaryGraph::is_the_same_with(PrimaryGraph *other_pg) {
+bool PrimaryGraph::same_with(PrimaryGraph *other_pg) {
     if (this->graph->get_nodes_num() != other_pg->graph->get_nodes_num() ||
         this->graph->get_edges_num() != other_pg->graph->get_edges_num())
         return false;
@@ -35,7 +35,7 @@ bool PrimaryGraph::is_the_same_with(PrimaryGraph *other_pg) {
     return b;
 }
 
-bool PrimaryGraph::is_the_same_with(MyGraph *other_pg) {
+bool PrimaryGraph::same_with(MyGraph *other_pg) {
     if (this->graph->get_nodes_num() != other_pg->get_nodes_num() ||
         this->graph->get_edges_num() != other_pg->get_edges_num())
         return false;
@@ -131,7 +131,7 @@ std::set<std::pair<PrimaryGraph *, PrimaryGraph *> > Pattern::get_joining_pg(Pat
 
     for (auto pg1 : primary_graphs) {
         for (auto pg2 : pattern->primary_graphs) {
-            if (pg1->is_the_same_with(pg2)) {
+            if (pg1->same_with(pg2)) {
                 l_list.insert(std::pair<PrimaryGraph *, PrimaryGraph *>(pg1, pg2));
             }
         }

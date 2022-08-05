@@ -42,7 +42,14 @@ void MyNode::remove_edge(MyNode *other_node) {
     if (iter != edges.end())
         delete (MyEdge*)(iter->second);
     edges.erase(other_node->get_id());
+}void MyNode::remove_edge_by_id(int id) {
+    std::tr1::unordered_map<int, void *>::iterator iter = edges.find(id);
+    if (iter != edges.end())
+        delete (MyEdge*)(iter->second);
+    edges.erase(id);
 }
+
+
 
 void *MyNode::get_edge_for_dest_node(int dest_node_id) {
     std::tr1::unordered_map<int, void *>::iterator temp = edges.find(dest_node_id);
@@ -72,4 +79,13 @@ bool MyNode::is_connected_with(int node_id, std::string label) {
         return false;
 
     return true;
+}
+
+bool MyNode::is_neighbor(MyNode* other_node){
+    for(auto iter : this->edges) {
+        auto now_edge = (MyEdge *)iter.second;
+        if(now_edge->get_neighbor()->get_id() == other_node->get_id())
+            return true;
+    }
+    return false;
 }

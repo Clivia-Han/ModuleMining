@@ -249,11 +249,25 @@ void MyGraph::remove_edge(int id1, int id2) {
 
     nodes[id1]->remove_edge(nodes[id2]);
     if (nodes[id1]->get_edges_size() == 0)
-        remove_node_ignore_edges(id1);
+        remove_node(id1);
 
     nodes[id2]->remove_edge(nodes[id1]);
     if (nodes[id2]->get_edges_size() == 0)
-        remove_node_ignore_edges(id2);
+        remove_node(id2);
+
+    edges_num--;
+}
+
+void MyGraph::remove_edge_x(int id1, int id2) {
+    sig.clear();
+
+    nodes[id1]->remove_edge(nodes[id2]);
+    if (nodes[id1]->get_edges_size() == 0)
+        remove_node(id1);
+
+    nodes[id2]->remove_edge_by_id(id1);
+    if(nodes[id2]->get_edges_size() == 0 && this->get_nodes_num() > 1)
+        remove_node(id2);
 
     edges_num--;
 }
@@ -261,7 +275,7 @@ void MyGraph::remove_edge(int id1, int id2) {
 /**
  * remove a node from the graph, ignoring the edge connecting to it
  */
-void MyGraph::remove_node_ignore_edges(int node_id) {
+void MyGraph::remove_node(int node_id) {
     sig.clear();
 
     nodes_by_label.find(get_node_with_id(node_id)->get_label())->second->erase(node_id);

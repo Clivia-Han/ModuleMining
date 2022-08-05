@@ -4,16 +4,12 @@
 #include "MyGraph.h"
 #include "core_file.h"
 
-/**
- * represents a primary graph of a specific subgraph
- * primary graphs are used for join-based subgraph extension
- */
 class PrimaryGraph {
 private:
     MyGraph *graph;
-    int src_node_id;//source from where the edge was deleted
-    MyEdge *edge;//the edge that was deleted
-    bool b;//false until a value is set for this primary graph
+    int src_node_id;
+    MyEdge *edge;
+    bool b;
 
 public:
     PrimaryGraph() { b = false; }
@@ -33,21 +29,18 @@ public:
 
     MyEdge *get_edge() { return edge; }
 
-//	std::string getCanLabel() { return sig; }
-    bool is_the_same_with(PrimaryGraph *other_pg);
+    bool same_with(PrimaryGraph *other_pg);
 
-    bool is_the_same_with(MyGraph *other_pg);
+    bool same_with(MyGraph *other_pg);
 
     bool is_set() { return b; }
 };
 
-/**
- * represents a frequent subgraph
- */
+
 class Pattern {
 private:
     int ID;
-    int frequency; //initialized to -1 to indicate that it is not set
+    int frequency;
     MyGraph *graph = 0;
     bool graph_copied;
     std::vector<std::tr1::unordered_set<int> *> occurences;
@@ -56,7 +49,7 @@ private:
     int predicted_valids = -1;
     int subtasking_fixed = 1;
     int *temp_mni_table;
-    bool result_exact;  //set to exact if the approximate frequency function can return exact result
+    bool result_exact;
     int *postponedNodes_mniTable;
     unsigned long max_iters;
 
@@ -86,12 +79,12 @@ public:
 
     std::string to_string();
 
-    void combine(Pattern *other_p, int add_to_id = 0);//the two patterns should have a similar graph
+    void combine(Pattern *other_p, int add_to_id = 0);
     std::vector<std::tr1::unordered_set<int> *> *get_occurences() { return &occurences; }
 
     void invalidate_frequency() { frequency = -1; }
 
-    int get_size();//get pattern size as the number of edges
+    int get_size();
 
     std::list<PrimaryGraph *> primary_graphs;
 

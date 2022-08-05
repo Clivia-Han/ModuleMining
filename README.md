@@ -52,9 +52,7 @@ Pay attention: **you only need build once, and all executable files are in folde
     -l <folder_path>            : load data
     -x <file_path>              : save for networkx
     -s <folder_path>            : store data
-    -m <store_path> 
-       <file_name> 
-       <support> 
+    -m <support> 
        <max_edges_num> 
        <max_nodes_num> 
        <given_seed_node_id>
@@ -76,8 +74,6 @@ Pay attention: **you only need build once, and all executable files are in folde
 ### Explanation of mining method parameters
 | parameters                          | value                                                                                | explanation                                                                                                                                                                  |
 |-------------------------------------|--------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `<store_path>`                      | input the characters of path                                                         | the path to store mining result                                                                                                                                              |
-| `<file_name>`                       | input the characters of file                                                         | the input file to mine frequent subgraph                                                                                                                                     |
 | `<support>`                         | input an interger                                                                    |
 | `<max_edges_num>`                   | input an interger, -1 for not set                                                    | the max num of edges in frequent subgraph                                                                                                                                    |
 | `<max_nodes_num>`                   | input an interger, -1 for not set                                                    | the max num of nodes in frequent subgraph                                                                                                                                    |
@@ -91,11 +87,11 @@ Here we provide some sample:
     -x ../output_data/networkx.xml
     -s ../output_data
     -q ../output_data
-    -m ../output_data ../pre_data/aes_core.v.table 100 -1 -1 -1 true 50
-    -m ../output_data ../pre_data/aes_core.v.table 200 -1 -1 -1 true 100
-    -m ../output_data ../pre_data/aes_core.v.table 200 8 8 -1 true 100
-    -m ../output_data ../pre_data/aes_core.v.table 200 -1 -1 7680 false 100
-    -m ../output_data ../pre_data/aes_core.v.table 500 -1 -1 -1 false 100
+    -m 100 -1 -1 -1 true 50
+    -m 200 -1 -1 -1 true 100
+    -m 200 8 8 -1 true 100
+    -m 200 -1 -1 7680 false 100
+    -m 500 -1 -1 -1 false 100
     ...
   ```
 Pay attention: **after run this project, you always need to use `-l` to get data from disks fist**.

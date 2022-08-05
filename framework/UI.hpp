@@ -13,8 +13,6 @@ bool Settings::debug_msg = false;
 int Settings::given_seed_node_id = -1;  //user-given seed node id
 bool Settings::throw_nodes_after_iterations = false;
 long Settings::postpone_nodes_after_iterations = 10000000;
-std::string Settings::store_path = "../output_data";
-std::string Settings::file_name = "../pre_data/aes_core.v.table";
 
 typedef uint64_t hash_t;
 constexpr hash_t prime = 0x100000001B3ull;
@@ -51,9 +49,7 @@ struct UI {
         std::cout << std::setw(28) << std::setiosflags(std::ios::left)
                   << "-q <folder_path>" << ": quit and store data\n";
         std::cout << std::setw(28) << std::setiosflags(std::ios::left)
-                  << "-m <store_path> \n"
-                  << "   <file_name> \n"
-                  << "   <support> \n"
+                  << "-m <support> \n"
                   << "   <max_edges_num> \n"
                   << "   <max_nodes_num> \n"
                   << "   <given_seed_node_id>\n"
@@ -103,27 +99,19 @@ struct UI {
                     args = split(string_view(comm_line), ' ');
                     for (int i = 0; i < args.size(); i++) {
                         if (i == 0) {
-                            Settings::store_path = args[i];
-                        } else if (i == 1) {
-                            Settings::file_name = args[i];
-                        } else if (i == 2) {
                             Settings::support = stoi(std::string(args[i]));
-                        } else if (i == 3) {
+                        } else if (i == 1) {
                             Settings::max_edges_num = stoi(std::string(args[i]));
-                        } else if (i == 4) {
+                        } else if (i == 2) {
                             Settings::max_nodes_num = stoi(std::string(args[i]));
-                        } else if (i == 5) {
+                        } else if (i == 3) {
                             Settings::given_seed_node_id = stoi(std::string(args[i]));
-                        } else if (i == 6) {
+                        } else if (i == 4) {
                             Settings::throw_nodes_after_iterations = std::string(args[i]) == "true";;
-                        } else if (i == 7) {
+                        } else if (i == 5) {
                             Settings::postpone_nodes_after_iterations = stoi(std::string(args[i]));
                         }
                     }
-                    sym.init_unpre(Settings::file_name);
-                    sym.store(Settings::store_path);
-                    std::cout << "Settings::store_path " << Settings::store_path << std::endl;
-                    std::cout << "Settings::file_name " << Settings::file_name << std::endl;
                     std::cout << "Settings::support " << Settings::support << std::endl;
                     std::cout << "Settings::max_edges_num " << Settings::max_edges_num << std::endl;
                     std::cout << "Settings::max_nodes_num " << Settings::max_nodes_num << std::endl;
@@ -132,7 +120,7 @@ struct UI {
                     std::cout << "Settings::postpone_nodes_after_iterations " << Settings::postpone_nodes_after_iterations << std::endl;
                     std::cout << "now start mining process" << std::endl;
                     start_time = get_msec();
-                    miner->start_mining_module(sym, Settings::support, Settings::given_seed_node_id, Settings::store_path);
+                    miner->start_mining_module(sym, Settings::support, Settings::given_seed_node_id);
                     end_time = get_msec();
                     elapsed = start_time - end_time;
                     std::cout << "Mining took " << (elapsed / 1000) << " sec and " << (elapsed % 1000) << " ms" << std::endl;
@@ -145,6 +133,8 @@ struct UI {
                     } else {
                         std::cout << "Error: load failed\n";
                     }
+                    std::cout << sym.now_graph_.node_id_set.size() << std::endl;
+                    std::cout << sym.now_graph_.edge_id_set.size() << std::endl;
                     break;
                 case "-x"_hash:
                     std::cin >> path;

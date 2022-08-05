@@ -8,7 +8,7 @@
 class MyEdge {
 private:
     std::string label;
-    MyNode *neighbor;   //the target node of the edge
+    MyNode *neighbor;   //the neighbor which the edge is linked to
 
 public:
     MyEdge(std::string label, MyNode *neighbor);

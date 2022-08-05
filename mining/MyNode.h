@@ -33,4 +33,8 @@ public:
     std::tr1::unordered_map<int, void *>::iterator get_edges_begin() { return edges.begin(); }
 
     std::tr1::unordered_map<int, void *>::iterator get_edges_end() { return edges.end(); }
+
+    bool is_neighbor(MyNode* other_node);
+
+    void remove_edge_by_id(int id);
 };

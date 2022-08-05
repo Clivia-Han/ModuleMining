@@ -10,10 +10,8 @@ int Settings::max_nodes_num = -1;
 bool Settings::debug_msg = false;
 int Settings::given_seed_node_id = -1;  //user-given seed node id
 std::string Settings::store_path = "../output_data";
-//bool Settings::use_predicted_inv_column = true;
 bool Settings::throw_nodes_after_iterations = false;
 long Settings::postpone_nodes_after_iterations = 10000000;
-//std::string Settings::file_name = "../Datasets/now_graph.data";
 
 
 int main() {
@@ -26,9 +24,7 @@ int main() {
     Miner *miner = new Miner();
     std::cout << "now start mining process" << std::endl;
     long long start_time = get_msec();
-//    miner->start_mining(Settings::file_name, Settings::graph_type, Settings::support, Settings::given_type);
-//    miner->start_mining_module(Settings::file_name, Settings::graph_type, Settings::support, Settings::given_seed_node_id);
-    miner->start_mining_module(sym, Settings::support, Settings::given_seed_node_id, Settings::store_path);
+    miner->start_mining_module(sym, Settings::support, Settings::given_seed_node_id);
     long long end_time = get_msec();
     elapsed = start_time - end_time;
 

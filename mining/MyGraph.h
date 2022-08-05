@@ -42,8 +42,10 @@ public:
     //remove an edge
     void remove_edge(int id1, int id2);
 
+    void remove_edge_x(int id1, int id2);
+
     //remove a node and discard its incident edges
-    void remove_node_ignore_edges(int node_id);
+    void remove_node(int node_id);
 
     //iteratot functions
     std::tr1::unordered_map<int, MyNode *>::const_iterator get_nodes_iterator();
