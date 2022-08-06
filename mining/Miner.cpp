@@ -104,6 +104,7 @@ void Miner::generate_now_graph(System &sym, int support, int seed_node_id) {
 }
 
 void Miner::start_mining_module(System &sym, int support, int seed_node_id) {
+    long long mining_start_time = get_msec();
     this->support = support;
 
     //load the graph
@@ -216,9 +217,16 @@ void Miner::start_mining_module(System &sym, int support, int seed_node_id) {
     for (auto &frequent_pattern: frequent_pattern_vec) {
         std::cout << *(frequent_pattern->get_graph()) << std::endl;
     }
-    print_frequent_module();
-    write_solutions("../output_data");
+    long long mining_end_time = get_msec();
+//    print_frequent_module();
+    long long mining_elapsed = mining_end_time - mining_start_time;
+    std::cout << "Mining took " << (mining_elapsed / 1000) << " sec and " << (mining_elapsed % 1000) << " ms" << std::endl;
+//    write_solutions("../output_data");
+    long long store_start_time = get_msec();
     store_frequent_instance("../output_data");
+    long long store_end_time = get_msec();
+    long long store_elapsed = store_end_time - store_elapsed;
+    std::cout << "store took " << (store_elapsed / 1000) << " sec and " << (store_elapsed % 1000) << " ms" << std::endl;
 }
 
 void Miner::DFS(int old_id, int new_id) {
@@ -380,7 +388,7 @@ void Miner::domain_dfs(int node_id, int graph_id, std::ofstream& out) {
             }
             int post_nodes_cnt = now_graph->get_nodes_num();
 
-            std::cout << id_map << std::endl;
+//            std::cout << id_map << std::endl;
             if (id_map.find(domain_id + 1) != id_map.end()) {
                 id_map.erase(domain_id + 1);
                 if (pre_nodes_cnt == post_nodes_cnt)
@@ -389,8 +397,8 @@ void Miner::domain_dfs(int node_id, int graph_id, std::ofstream& out) {
                     id_set.erase(next_id);
             }
 
-            std::cout << id_map << std::endl;
-            std::cout << id_set << std::endl;
+//            std::cout << id_map << std::endl;
+//            std::cout << id_set << std::endl;
         }
     }
 }

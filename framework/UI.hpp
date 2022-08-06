@@ -119,11 +119,11 @@ struct UI {
                     std::cout << "Settings::throw_nodes_after_iterations " << Settings::throw_nodes_after_iterations << std::endl;std::cout << "Settings::throw_nodes_after_iterations " << Settings::throw_nodes_after_iterations << std::endl;
                     std::cout << "Settings::postpone_nodes_after_iterations " << Settings::postpone_nodes_after_iterations << std::endl;
                     std::cout << "now start mining process" << std::endl;
-                    start_time = get_msec();
+//                    start_time = get_msec();
                     miner->start_mining_module(sym, Settings::support, Settings::given_seed_node_id);
                     end_time = get_msec();
-                    elapsed = start_time - end_time;
-                    std::cout << "Mining took " << (elapsed / 1000) << " sec and " << (elapsed % 1000) << " ms" << std::endl;
+//                    elapsed = start_time - end_time;
+//                    std::cout << "Mining took " << (elapsed / 1000) << " sec and " << (elapsed % 1000) << " ms" << std::endl;
                     std::cout << "Finished!";
                     break;
                 case "-l"_hash:

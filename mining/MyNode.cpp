@@ -42,14 +42,14 @@ void MyNode::remove_edge(MyNode *other_node) {
     if (iter != edges.end())
         delete (MyEdge*)(iter->second);
     edges.erase(other_node->get_id());
-}void MyNode::remove_edge_by_id(int id) {
-    std::tr1::unordered_map<int, void *>::iterator iter = edges.find(id);
-    if (iter != edges.end())
-        delete (MyEdge*)(iter->second);
-    edges.erase(id);
 }
 
-
+void MyNode::remove_edge_by_id(int id) {
+    std::tr1::unordered_map<int, void *>::iterator iter = edges.find(id);
+    if (iter != edges.end())
+        delete (MyEdge *) (iter->second);
+    edges.erase(id);
+}
 
 void *MyNode::get_edge_for_dest_node(int dest_node_id) {
     std::tr1::unordered_map<int, void *>::iterator temp = edges.find(dest_node_id);
