@@ -35,9 +35,12 @@ public:
 
     void add_edge(MyNode *src_node, MyNode *dest_node, std::string edge_label);
 
-    void add_edge(int src_id, int dest_id, std::string edge_label, std::tr1::unordered_map<std::string, void *> &edge_to_freq);
+    void add_edge(int src_id, int dest_id, std::string edge_label,
+                  std::tr1::unordered_map<std::string, void *> &edge_to_freq);
 
-    void add_edge(int src_id, int dest_id, std::string edge_label, std::tr1::unordered_map<std::string, void *> &edge_to_freq, std::map<std::string, std::map<int, std::set<int>>> &freq_edge_pairs);
+    void add_edge(int src_id, int dest_id, std::string edge_label,
+                  std::tr1::unordered_map<std::string, void *> &edge_to_freq,
+                  std::map<std::string, std::map<int, std::set<int>>> &freq_edge_pairs);
 
     //remove an edge
     void remove_edge(int id1, int id2);
@@ -74,7 +77,8 @@ public:
                        std::tr1::unordered_map<int, std::tr1::unordered_set<int> *> &domains_values,
                        int restricted_domain_id = -1, int restricted_node_id = -1,
                        std::tr1::unordered_map<int, std::tr1::unordered_set<int> *> *postponed_nodes = nullptr,
-                       bool prune_by_domain_values = true, unsigned long max_iters = Settings::postpone_nodes_after_iterations);
+                       bool prune_by_domain_values = true,
+                       unsigned long max_iters = Settings::postpone_nodes_after_iterations);
 
     //graph isomorphism function
     bool same_with(MyGraph *other_g);

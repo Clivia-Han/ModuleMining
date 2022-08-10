@@ -145,7 +145,7 @@ int CSPSolver::get_frequency(MyGraph *graph, Pattern *pattern, int support, doub
         if (approximate != -1) {
             std::map<int, int> id_map;
             int c = 0;
-            for (int iter : *current_domain) {
+            for (int iter: *current_domain) {
                 id_map.insert(std::pair<int, int>(c, iter));
                 c++;
             }
@@ -326,7 +326,7 @@ CSPSolver::check_ac(MyGraph *graph, std::tr1::unordered_map<int, std::tr1::unord
         MyNode *pNode = iter->second;
         for (std::tr1::unordered_map<int, void *>::iterator iter1 = pNode->get_edges_begin(); iter1 !=
                                                                                               pNode->get_edges_end(); iter1++) {
-            MyEdge *edge = (MyEdge *) (iter1->second);
+            MyEdge *edge = (MyEdge * )(iter1->second);
             int id1 = pNode->get_id();
             int id2 = edge->get_neighbor()->get_id();
             std::string sig = get_sig(id1, id2, edge->get_label());
@@ -397,7 +397,7 @@ CSPSolver::check_ac(MyGraph *graph, std::tr1::unordered_map<int, std::tr1::unord
             int id1 = edge_info->id1;
             for (std::tr1::unordered_map<int, void *>::iterator iter1 = pNode->get_edges_begin(); iter1 !=
                                                                                                   pNode->get_edges_end(); iter1++) {
-                MyEdge *edge = (MyEdge *) (iter1->second);
+                MyEdge *edge = (MyEdge * )(iter1->second);
 
                 int id2 = edge->get_neighbor()->get_id();
                 if (id2 == edge_info->id2)
@@ -425,7 +425,7 @@ CSPSolver::check_ac(MyGraph *graph, std::tr1::unordered_map<int, std::tr1::unord
             int id1 = edge_info->id2;
             for (std::tr1::unordered_map<int, void *>::iterator iter1 = pNode->get_edges_begin(); iter1 !=
                                                                                                   pNode->get_edges_end(); iter1++) {
-                MyEdge *edge = (MyEdge *) (iter1->second);
+                MyEdge *edge = (MyEdge * )(iter1->second);
 
                 int id2 = edge->get_neighbor()->get_id();
                 if (id2 == edge_info->id1)
@@ -497,7 +497,7 @@ CSPSolver::refine(MyGraph *graph, std::tr1::unordered_set<int> *D1, std::tr1::un
         bool deleteIt = true;
         for (std::tr1::unordered_map<int, void *>::iterator iter1 = node->get_edges_begin(); iter1 !=
                                                                                              node->get_edges_end(); ++iter1) {
-            MyEdge *edge = (MyEdge *) (iter1->second);
+            MyEdge *edge = (MyEdge * )(iter1->second);
             if (edge->get_label() != edgeLabel)
                 continue;
             std::tr1::unordered_set<int>::iterator iter_f = D2->find(edge->get_neighbor()->get_id());

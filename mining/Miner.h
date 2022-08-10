@@ -5,6 +5,7 @@ Miner.h
  */
 
 #pragma once
+
 #include "SigMap.h"
 #include "Pattern.h"
 #include "System.hpp"
@@ -61,5 +62,5 @@ public:
 
     void store_frequent_instance(const std::string &path);
 
-    void domain_dfs(int node_id, int graph_id, std::ofstream& out);
+    void domain_dfs(int node_id, int graph_id, std::ofstream &out);
 };

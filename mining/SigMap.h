@@ -53,4 +53,5 @@ public:
 
     void delete_objects();
 };
+
 void vect_map_destruct(std::vector<SigMap *> vm);

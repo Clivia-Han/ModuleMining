@@ -16,7 +16,7 @@ bool check_current_status(MyGraph *graph1, MyGraph *graph2, std::vector<SetIter 
     MyNode *query_graph_node = graph1->get_node_with_id(nodes_order[current_s.size() - 1]);
 
     for (std::tr1::unordered_map<int, void *>::iterator iter = query_graph_node->get_edges_begin(); iter !=
-            query_graph_node->get_edges_end(); ++iter) {
+                                                                                                    query_graph_node->get_edges_end(); ++iter) {
         int other_node_id = iter->first;
         MyEdge *edge = (MyEdge *) (iter->second);
 
@@ -176,7 +176,7 @@ MyGraph::MyGraph(MyGraph *graph) {
         MyNode *node = nodes.find(old_node->get_id())->second;
 
         for (std::tr1::unordered_map<int, void *>::iterator iter2 = old_node->get_edges_begin(); iter2 !=
-                old_node->get_edges_end(); ++iter2) {
+                                                                                                 old_node->get_edges_end(); ++iter2) {
             MyEdge *edge = (MyEdge *) (iter2->second);
             node->add_edge(nodes.find(edge->get_neighbor()->get_id())->second, edge->get_label());
         }
@@ -266,7 +266,7 @@ void MyGraph::remove_edge_x(int id1, int id2) {
         remove_node(id1);
 
     nodes[id2]->remove_edge_by_id(id1);
-    if(nodes[id2]->get_edges_size() == 0 && this->get_nodes_num() > 1)
+    if (nodes[id2]->get_edges_size() == 0 && this->get_nodes_num() > 1)
         remove_node(id2);
 
     edges_num--;
@@ -283,7 +283,8 @@ void MyGraph::remove_node(int node_id) {
     nodes.erase(node_id);
 }
 
-void MyGraph::add_edge(int src_id, int dest_id, std::string edge_label, std::tr1::unordered_map<std::string, void *> &edge_to_freq,
+void MyGraph::add_edge(int src_id, int dest_id, std::string edge_label,
+                       std::tr1::unordered_map<std::string, void *> &edge_to_freq,
                        std::map<std::string, std::map<int, std::set<int>>> &freq_edge_pairs) {
     if (sig.length() > 0)
         sig.clear();
@@ -310,7 +311,8 @@ void MyGraph::add_edge(int src_id, int dest_id, std::string edge_label, std::tr1
     insert_into_edge_freq(dest_node, src_id, src_node->get_label(), edge_label, edge_to_freq, freq_edge_pairs, false);
 }
 
-void MyGraph::add_edge(int src_id, int dest_id, std::string edge_label, std::tr1::unordered_map<std::string, void *> &edge_to_freq) {
+void MyGraph::add_edge(int src_id, int dest_id, std::string edge_label,
+                       std::tr1::unordered_map<std::string, void *> &edge_to_freq) {
     if (sig.length() > 0)
         sig.clear();
 
@@ -398,7 +400,7 @@ bool MyGraph::is_connected() {
         visited.insert(std::pair<int, MyNode *>(node->get_id(), node));//3
         //add its neighbors
         for (std::tr1::unordered_map<int, void *>::iterator iter = node->get_edges_begin(); iter !=
-                node->get_edges_end(); ++iter) {
+                                                                                            node->get_edges_end(); ++iter) {
             int neighbor_id = iter->first;
             if (visited.find(neighbor_id) != visited.end())
                 continue;
@@ -446,7 +448,7 @@ bool MyGraph::same_with(MyGraph *other_g) {
         b = false;
     }
 
-    for (auto & iter1 : result) {
+    for (auto &iter1: result) {
         delete iter1;
     }
     result.clear();
@@ -493,7 +495,7 @@ void MyGraph::is_isomorphic(MyGraph *graph, std::vector<std::map<int, int> *> &r
         int start = to_check.size();
         // put the neighbors of currNode into the 'toCheck' list
         for (std::tr1::unordered_map<int, void *>::iterator iter = curr_node->get_edges_begin(); iter !=
-                curr_node->get_edges_end(); ++iter) {
+                                                                                                 curr_node->get_edges_end(); ++iter) {
             int other_id = iter->first;
             if (checked.find(other_id) == checked.end()) {
                 //put them in order based on the degree
@@ -549,7 +551,7 @@ void MyGraph::is_isomorphic(MyGraph *graph, std::vector<std::map<int, int> *> &r
                     postponed_nodes->insert(
                             std::pair<int, std::tr1::unordered_set<int> *>(restricted_domain_id, nodes_list));
                 }
-                // or let the set nodesList be the set corresponding to the restrictedDomainID of postponedNodes
+                    // or let the set nodesList be the set corresponding to the restrictedDomainID of postponedNodes
                 else {
                     nodes_list = iter->second;
                 }
@@ -557,7 +559,7 @@ void MyGraph::is_isomorphic(MyGraph *graph, std::vector<std::map<int, int> *> &r
 
                 if (Settings::debug_msg) {
                     std::cout << "is_isomorphic function exceeded the allowed processing limit! NodeID: "
-                         << restricted_node_id << ", DomainID: " << restricted_domain_id << std::endl;
+                              << restricted_node_id << ", DomainID: " << restricted_domain_id << std::endl;
                     std::cout << "max_iters = " << max_iters << ", num_iterations = " << num_iterations << std::endl;
                 }
 
@@ -630,7 +632,7 @@ void MyGraph::is_isomorphic(MyGraph *graph, std::vector<std::map<int, int> *> &r
 
                 if (restricted_domain_id != -1) {
                     //delete elements in selected
-                    for (auto & iter : selected) {
+                    for (auto &iter: selected) {
                         iter->se->clear();
                         delete iter->se;
                         delete iter;
@@ -661,7 +663,7 @@ void MyGraph::is_isomorphic(MyGraph *graph, std::vector<std::map<int, int> *> &r
                     }
                 }
                 for (std::tr1::unordered_map<int, void *>::iterator iter = temp->get_edges_begin(); iter !=
-                        temp->get_edges_end(); ++iter) {
+                                                                                                    temp->get_edges_end(); ++iter) {
                     num_iterations++;
 
                     if (num_iterations > max_iters)
@@ -691,7 +693,7 @@ void MyGraph::is_isomorphic(MyGraph *graph, std::vector<std::map<int, int> *> &r
                         // tempN1 is connected to other nodes, check whether the node 'otherNode' on data graph
                         // is also connected to the corresponding node
                         for (std::tr1::unordered_map<int, void *>::iterator iter1 = temp_n1->get_edges_begin(); iter1 !=
-                                temp_n1->get_edges_end(); ++iter1) {
+                                                                                                                temp_n1->get_edges_end(); ++iter1) {
                             num_iterations++;
 
                             if (num_iterations > max_iters)
@@ -775,13 +777,13 @@ std::string MyGraph::get_sig() {
 
 void MyGraph::print_instance(std::ostream &os, int id, const MyGraph &g) {
     os << "# t " << id << "\n";
-    for (auto ii : g.nodes) {
+    for (auto ii: g.nodes) {
         MyNode *node = ii.second;
         os << "v " << node->get_id() << " " << node->get_label() << "\n";
     }
 
     std::tr1::unordered_set<std::string> saved_edges;
-    for (auto ii : g.nodes) {
+    for (auto ii: g.nodes) {
         MyNode *node = ii.second;
         for (std::tr1::unordered_map<int, void *>::iterator iter1 = node->get_edges_begin(); iter1 !=
                                                                                              node->get_edges_end(); iter1++) {
@@ -807,17 +809,17 @@ void MyGraph::print_instance(std::ostream &os, int id, const MyGraph &g) {
 std::ostream &operator<<(std::ostream &os, const MyGraph &g) {
     os << "# t 1\n";
     //output the nodes
-    for (auto ii : g.nodes) {
+    for (auto ii: g.nodes) {
         MyNode *node = ii.second;
         os << "v " << node->get_id() << " " << node->get_label() << "\n";
     }
 
     //output the edges
     std::tr1::unordered_set<std::string> saved_edges;//list to keep track of already saved edges
-    for (auto ii : g.nodes) {
+    for (auto ii: g.nodes) {
         MyNode *node = ii.second;
         for (std::tr1::unordered_map<int, void *>::iterator iter1 = node->get_edges_begin(); iter1 !=
-                node->get_edges_end(); iter1++) {
+                                                                                             node->get_edges_end(); iter1++) {
             auto *edge = (MyEdge *) iter1->second;
 
             //check whether it has been added before or not

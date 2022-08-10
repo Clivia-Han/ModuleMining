@@ -17,6 +17,7 @@ long Settings::postpone_nodes_after_iterations = 10000000;
 typedef uint64_t hash_t;
 constexpr hash_t prime = 0x100000001B3ull;
 constexpr hash_t basis = 0xCBF29CE484222325ull;
+
 hash_t hash_(char const *str) {
     hash_t ret(basis);
     while (*str) {
@@ -26,10 +27,12 @@ hash_t hash_(char const *str) {
     }
     return ret;
 }
+
 constexpr hash_t hash_compile_time(char const *str, hash_t last_value = basis) {
     return *str ? hash_compile_time(str + 1, (*str ^ last_value) * prime) : last_value;
 }
-constexpr hash_t operator ""_hash(char const* p, size_t) {
+
+constexpr hash_t operator ""_hash(char const *p, size_t) {
     return hash_compile_time(p);
 }
 
@@ -116,8 +119,12 @@ struct UI {
                     std::cout << "Settings::max_edges_num " << Settings::max_edges_num << std::endl;
                     std::cout << "Settings::max_nodes_num " << Settings::max_nodes_num << std::endl;
                     std::cout << "Settings::given_seed_node_id " << Settings::given_seed_node_id << std::endl;
-                    std::cout << "Settings::throw_nodes_after_iterations " << Settings::throw_nodes_after_iterations << std::endl;std::cout << "Settings::throw_nodes_after_iterations " << Settings::throw_nodes_after_iterations << std::endl;
-                    std::cout << "Settings::postpone_nodes_after_iterations " << Settings::postpone_nodes_after_iterations << std::endl;
+                    std::cout << "Settings::throw_nodes_after_iterations " << Settings::throw_nodes_after_iterations
+                              << std::endl;
+                    std::cout << "Settings::throw_nodes_after_iterations " << Settings::throw_nodes_after_iterations
+                              << std::endl;
+                    std::cout << "Settings::postpone_nodes_after_iterations "
+                              << Settings::postpone_nodes_after_iterations << std::endl;
                     std::cout << "now start mining process" << std::endl;
 //                    start_time = get_msec();
                     miner->start_mining_module(sym, Settings::support, Settings::given_seed_node_id);

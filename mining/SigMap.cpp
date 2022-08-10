@@ -106,7 +106,7 @@ Pattern *SigMap::exists(Pattern *pattern, std::list<Pattern *> *v) {
         std::cout << "SigMap::exists starts..." << std::endl;
     }
 
-    for (auto temp : *v) {
+    for (auto temp: *v) {
         if (the_same(pattern, temp)) {
             if (Settings::debug_msg) {
                 std::cout << "SigMap::exists finished, pattern: " << temp->get_id() << " found." << std::endl;
@@ -143,12 +143,12 @@ bool SigMap::the_same(Pattern *p1, Pattern *p2) {
 }
 
 void SigMap::add_all(SigMap *sig_map) {
-    for (auto & iter : sig_map->patterns_sig) {
+    for (auto &iter: sig_map->patterns_sig) {
         patterns_sig.insert(std::pair<std::string, Pattern *>(iter.first, iter.second));
         size++;
     }
 
-    for (auto & iter : sig_map->patterns_nosig) {
+    for (auto &iter: sig_map->patterns_nosig) {
         auto *v = new std::list<Pattern *>();
         v->insert(v->begin(), iter.second->begin(), iter.second->end());
         patterns_nosig.insert(std::pair<std::string, std::list<Pattern *> *>(iter.first, v));
@@ -240,7 +240,7 @@ void SigMap::print(int counter) {
 
 void SigMap::clear() {
     patterns_sig.clear();
-    for (auto & iter : patterns_nosig) {
+    for (auto &iter: patterns_nosig) {
         delete iter.second;
     }
     patterns_nosig.clear();
@@ -257,7 +257,7 @@ void SigMap::delete_objects() {
 }
 
 void vect_map_destruct(std::vector<SigMap *> vm) {
-    for (auto & iter1 : vm) {
+    for (auto &iter1: vm) {
         iter1->delete_objects();
         iter1->clear();
         delete iter1;

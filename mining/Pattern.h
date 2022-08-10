@@ -80,6 +80,7 @@ public:
     std::string to_string();
 
     void combine(Pattern *other_p, int add_to_id = 0);
+
     std::vector<std::tr1::unordered_set<int> *> *get_occurences() { return &occurences; }
 
     void invalidate_frequency() { frequency = -1; }

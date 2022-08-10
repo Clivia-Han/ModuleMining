@@ -27,7 +27,7 @@ bool PrimaryGraph::same_with(PrimaryGraph *other_pg) {
     else
         b = false;
 
-    for (auto & iter1 : result) {
+    for (auto &iter1: result) {
         delete iter1;
     }
     result.clear();
@@ -52,7 +52,7 @@ bool PrimaryGraph::same_with(MyGraph *other_pg) {
     else
         b = false;
 
-    for (auto & iter1 : result) {
+    for (auto &iter1: result) {
         delete iter1;
     }
     result.clear();
@@ -129,8 +129,8 @@ void Pattern::set_invalid_col(int inv_c, int p_valids) {
 std::set<std::pair<PrimaryGraph *, PrimaryGraph *> > Pattern::get_joining_pg(Pattern *pattern) {
     std::set<std::pair<PrimaryGraph *, PrimaryGraph *> > l_list;
 
-    for (auto pg1 : primary_graphs) {
-        for (auto pg2 : pattern->primary_graphs) {
+    for (auto pg1: primary_graphs) {
+        for (auto pg2: pattern->primary_graphs) {
             if (pg1->same_with(pg2)) {
                 l_list.insert(std::pair<PrimaryGraph *, PrimaryGraph *>(pg1, pg2));
             }
@@ -179,7 +179,7 @@ std::string Pattern::to_string() {
         str = str + int_to_string(i) + " with label: " + graph->get_node_with_id(i)->get_label() +
               "\nNodes list:\n";
 
-        for (int iter : *occurences[i]) {
+        for (int iter: *occurences[i]) {
             str = str + "," + int_to_string(iter);
         }
         str = str + "\n";
@@ -191,8 +191,8 @@ void Pattern::combine(Pattern *other_p, int add_to_id) {
     invalidate_frequency();
     for (int i = 0; i < graph->get_nodes_num(); i++) {
         for (std::tr1::unordered_set<int>::iterator iter = other_p->get_occurences()->at(i)->begin(); iter !=
-                                                                                                 other_p->get_occurences()->at(
-                                                                                                         i)->end(); ++iter) {
+                                                                                                      other_p->get_occurences()->at(
+                                                                                                              i)->end(); ++iter) {
             occurences[i]->insert((*iter) + add_to_id);
         }
     }
@@ -216,8 +216,8 @@ bool Pattern::has_unique_labels() {
 }
 
 void vect_map_destruct(std::vector<std::map<std::string, Pattern *> *> vm) {
-    for (auto & iter1 : vm) {
-        for (auto & iter2 : *iter1) {
+    for (auto &iter1: vm) {
+        for (auto &iter2: *iter1) {
             delete (iter2.second);
 
         }
@@ -231,10 +231,10 @@ void vect_map_destruct(std::vector<std::map<std::string, Pattern *> *> vm) {
 Pattern::~Pattern() {
     if (this->graph_copied)
         delete graph;
-    for (auto & occurence : occurences)
+    for (auto &occurence: occurences)
         delete occurence;
 
-    for (auto & primary_graph : primary_graphs) {
+    for (auto &primary_graph: primary_graphs) {
         delete primary_graph;
     }
 

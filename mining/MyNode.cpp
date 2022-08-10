@@ -12,13 +12,13 @@ MyNode::MyNode(int id, std::string label) {
 }
 
 MyNode::~MyNode() {
-    for (auto ii : edges) {
+    for (auto ii: edges) {
         auto *edge = (MyEdge *) (ii.second);
         delete edge;
     }
     edges.clear();
 
-    for (auto rev_edge : rev_edges) {
+    for (auto rev_edge: rev_edges) {
         auto *edge = (MyEdge *) (rev_edge.second);
         delete edge;
     }
@@ -40,7 +40,7 @@ void MyNode::add_edge(MyNode *other_node, std::string edge_label) {
 void MyNode::remove_edge(MyNode *other_node) {
     std::tr1::unordered_map<int, void *>::iterator iter = edges.find(other_node->get_id());
     if (iter != edges.end())
-        delete (MyEdge*)(iter->second);
+        delete (MyEdge *) (iter->second);
     edges.erase(other_node->get_id());
 }
 
@@ -81,10 +81,10 @@ bool MyNode::is_connected_with(int node_id, std::string label) {
     return true;
 }
 
-bool MyNode::is_neighbor(MyNode* other_node){
-    for(auto iter : this->edges) {
-        auto now_edge = (MyEdge *)iter.second;
-        if(now_edge->get_neighbor()->get_id() == other_node->get_id())
+bool MyNode::is_neighbor(MyNode *other_node) {
+    for (auto iter: this->edges) {
+        auto now_edge = (MyEdge *) iter.second;
+        if (now_edge->get_neighbor()->get_id() == other_node->get_id())
             return true;
     }
     return false;

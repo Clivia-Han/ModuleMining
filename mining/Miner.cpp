@@ -218,7 +218,8 @@ void Miner::start_mining_module(System &sym, int support, int seed_node_id) {
     long long mining_end_time = get_msec();
 //    print_frequent_module();
     long long mining_elapsed = mining_end_time - mining_start_time;
-    std::cout << "Mining took " << (mining_elapsed / 1000) << " sec and " << (mining_elapsed % 1000) << " ms" << std::endl;
+    std::cout << "Mining took " << (mining_elapsed / 1000) << " sec and " << (mining_elapsed % 1000) << " ms"
+              << std::endl;
 //    write_solutions("../output_data");
     long long store_start_time = get_msec();
     store_frequent_instance("../output_data");
@@ -408,7 +409,7 @@ void Miner::store_frequent_instance(const std::string &path) {
 //    }
 //}
 
-void Miner::domain_dfs(int node_id, int graph_id, std::ofstream& out) {
+void Miner::domain_dfs(int node_id, int graph_id, std::ofstream &out) {
     int domain_id = id_map.size();
     now_graph->add_node(node_id, graph->get_node_with_id(node_id)->get_label());
     id_map[domain_id] = node_id;
