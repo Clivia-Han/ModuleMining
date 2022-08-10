@@ -1,7 +1,3 @@
-/**
- * This class is responsible for generating a unique graph canonical label
- */
-
 #include "MyEdge.h"
 #include "Settings.h"
 #include "core_file.h"
@@ -19,37 +15,38 @@ int mysprintf(char *str, std::string x) {
     return magnitude;
 }
 
-int mysprintf(char *str, int x) {
-    int i;
-    int magnitude = 0;
-    if (x < 10) {
-        // change the int 'x' to char, and put in str
-        *str = x + '0';
-        // move the pointer str to the next space
-        return 1;
-    } else if (x < 100) {
-        // Convert x to two-digit character form, and put in str
-        *(str + 1) = (x % 10) + '0';
-        *(str) = (x / 10) + '0';
-        // Move the pointer back two paces
-        return 2;
-    } else {
-        int tmp = x;
-        while (tmp > 0) {
-            tmp /= 10;
-            magnitude++;
-        }
-        i = magnitude - 1;
-    }
+// Remove this function as it was never used and when I tested I got some errors
+// int mysprintf(char *str, int x) {
+//     int i;
+//     int magnitude = 0;
+//     if (x < 10) {
+//         // change the int 'x' to char, and put in str
+//         *str = x + '0';
+//         // move the pointer str to the next space
+//         return 1;
+//     } else if (x < 100) {
+//         // Convert x to two-digit character form, and put in str
+//         *(str + 1) = (x % 10) + '0';
+//         *(str) = (x / 10) + '0';
+//         // Move the pointer back two paces
+//         return 2;
+//     } else {
+//         int tmp = x;
+//         while (tmp > 0) {
+//             tmp /= 10;
+//             magnitude++;
+//         }
+//         i = magnitude - 1;
+//     }
 
-    while (x > 0) {
-        *(str + i) = (x % 10) + '0';
-        x = x / 10;
-        i = i - 1;
-    }
+//     while (x > 0) {
+//         *(str + i) = (x % 10) + '0';
+//         x = x / 10;
+//         i = i - 1;
+//     }
 
-    return magnitude;
-}
+//     return magnitude;
+// }
 
 void print_combinations(std::vector<std::vector<NodeInfo *> *> *all) {
     for (auto combination : *all) {
@@ -60,12 +57,11 @@ void print_combinations(std::vector<std::vector<NodeInfo *> *> *all) {
     }
 }
 
-
+// change the `append` into `+=` as the return value of get_label() is string
 std::string Sig_Partition::get_prefix() {
     std::string prefix;
     for (auto & node : nodes) {
-        prefix.append(node->node->get_label());
-        prefix.append("\0");
+        prefix += (node->node->get_label() + "\0");
     }
 
     return prefix;
@@ -84,21 +80,13 @@ bool Signature::sort_partitions(std::vector<Sig_Partition *> &parts) {
     sort(parts.begin(), parts.begin() + parts.size(), descending);//std::greater<Sig_Partition*>());
     int i = 0;
     for (auto part: parts) {
-        int old_id = part->get_id();
-        if (old_id != i)
+        if (part->get_id() != i)
             b = false;
-        part->set_id(i);
-        i++;
+        part->set_id(i++);
     }
     return b;
 }
 
-/**
- * the main function for generating canonical label for the given graph
- * This function is based on the work published in:
- * "Finding Frequent Patterns in a Large Sparse Graph", DMKD 2005
- * If the graph is huge and takes much time, the returned canonical label is not unique and is identified by prefix of X
- */
 std::string Signature::generate(MyGraph *graph) {
     if (graph->get_nodes_num() == 0)
         return "";
@@ -109,11 +97,10 @@ std::string Signature::generate(MyGraph *graph) {
     std::map<std::string, Sig_Partition *> parts;
     for (std::tr1::unordered_map<int, MyNode *>::const_iterator enum1 = graph->get_nodes_iterator(); enum1 !=
                                                                                                      graph->get_nodes_end_iterator(); ++enum1) {
-        MyNode *node = (*enum1).second;
-        NodeInfo *nInfo = new NodeInfo(node);
+        NodeInfo *nInfo = new NodeInfo((*enum1).second);
         std::string label = nInfo->node->get_label();
         int degree = nInfo->node->get_edges_size();
-        std::string key = degree + "_" + label;
+        std::string key = std::to_string(degree) + "_" + label;
 
         auto t_iter = parts.find(key);
         Sig_Partition *part;
@@ -180,10 +167,11 @@ std::string Signature::generate(MyGraph *graph) {
 
                 int j_count = 0;
                 //Repartition using partition information in parts_v and new_parts_arr
-                for (auto j = new_parts_arr.begin(); j != new_parts_arr.end(); ++j, j_count++) {
-                    (*j)->set_id(i + j_count);
-                    (*j)->set_sorting_values();
-                    parts_v.insert(parts_v.begin() + i + j_count, *j);
+                // for (auto j = new_parts_arr.begin(); j != new_parts_arr.end(); ++j, j_count++) {
+                for (auto j : new_parts_arr) {
+                    j->set_id(i + j_count);
+                    j->set_sorting_values();
+                    parts_v.insert(parts_v.begin() + i + (j_count++), j);
                 }
 
                 for (unsigned int j = i + new_parts_arr.size(); j < parts_v.size(); j++) {
@@ -222,8 +210,8 @@ std::string Signature::generate(MyGraph *graph) {
             std::cout << i->get_combinations()->size() << std::endl;
         }
         i->counter = 0;
-        prefix.append(i->get_prefix());
-        prefix.append(",");
+        prefix += i->get_prefix();
+        prefix += ",";
     }
 
     //generate a fast lookup array for edge labels
@@ -255,7 +243,7 @@ std::string Signature::generate(MyGraph *graph) {
         if (parts_v.at(i)->get_num_nodes() > 10) {
             if (Settings::debug_msg) {
                 std::cout << "pre_pre_ number of combinations is very large = (" << parts_v.at(i)->get_num_nodes() << "!), "
-                     << std::endl;
+                          << std::endl;
             }
             std::stringstream nosig;
             nosig << "X" << graph->get_nodes_num() << "_" << graph->get_edges_num();
@@ -398,6 +386,19 @@ std::string Signature::generate(MyGraph *graph) {
         (*i)->sig_part_destructor();
         delete (*i);
     }
+
+    for (auto i : parts_v) {
+        //added to delete NodeInfo for this partition
+        if (i->get_combinations()->size() > 0) {
+            for (auto iter1 = (*i->get_combinations()->begin())->begin();
+                 iter1 != (*i->get_combinations()->begin())->end(); ++iter1) {
+                delete (*iter1);
+            }
+        }
+
+        i->sig_part_destructor();
+        delete i;
+    }
     parts_v.clear();
     if (enable_print) std::cout << "All destruction work finished" << std::endl;
 
@@ -414,28 +415,23 @@ std::string Signature::generate_neighbors_list(NodeInfo *nInfo, std::map<int, No
 
     std::vector<PartID_label *> ordered_nl;
     for (std::tr1::unordered_map<int, void *>::const_iterator enum1 = node->get_edges_begin(); enum1 !=
-            node->get_edges_end(); ++enum1) {
+                                                                                               node->get_edges_end(); ++enum1) {
         MyEdge *edge = (MyEdge *) enum1->second;
 
         //get the other node partition
         MyNode *o_node = edge->get_neighbor();
-        int o_node_part_id = (allNodes.find(o_node->get_id()))->second->part_id;
 
-        //prepare the details
-        std::string o_node_label = o_node->get_label();
-        PartID_label *pidl = new PartID_label();
+        // prepare the details
         // pidl->label: otherNodeLabel + edge_label
-        pidl->label = o_node_label;
-        pidl->label = pidl->label + edge->get_label();//added by ehab on 13 Aug 2015
-        pidl->part_id = o_node_part_id;
+        PartID_label *pidl = new PartID_label((allNodes.find(o_node->get_id()))->second->part_id,
+                                              o_node->get_label() + edge->get_label());
 
         //put the details in order
         auto i = ordered_nl.begin();
         for (; i != ordered_nl.end(); i++) {
             PartID_label *current_pidl = *i;
-            if (pidl->part_id > current_pidl->part_id ||
-                (pidl->part_id == current_pidl->part_id && pidl->label.compare(current_pidl->label) > 0));
-            else
+            if(!(pidl->part_id > current_pidl->part_id ||
+                 (pidl->part_id == current_pidl->part_id && pidl->label.compare(current_pidl->label) > 0)))
                 break;
         }
         ordered_nl.insert(i, pidl);
@@ -461,26 +457,23 @@ Signature::generate_can_label(std::vector<NodeInfo *> *nodes, MyGraph *graph, st
     while (true)
         //for(vector<NodeInfo* >::iterator enum1 = nodes->begin();enum1!=nodes_end;++enum1)
     {
-        NodeInfo *n_info1 = *enum1;
-        std::string *_label = ellt[n_info1->node->get_id()];
-
         j = enum1 + 1;
         if (j == nodes_end)
             break;
+
+        std::string *_label = ellt[(*enum1)->node->get_id()];
+
         for (; j != nodes_end; ++j) {
             // edge label
             std::string label = _label[(*j)->node->get_id()];
             if (label == "") {
-                *sb = '0';
-                sb++;
+                *(sb++) = '0';
             } else {
                 sb += mysprintf(sb, label);
             }
-            *sb = '*';
-            sb++;
+            *(sb++) = '*';
         }
-        *sb = ',';
-        sb++;
+        *(sb++) = ',';
 
         if (one_line_only)
             break;
@@ -492,31 +485,31 @@ Signature::generate_can_label(std::vector<NodeInfo *> *nodes, MyGraph *graph, st
 }
 
 bool ascending(Sig_Partition *a, Sig_Partition *b) {
+    return !descending(a, b);
+}
+
+bool descending(Sig_Partition *a, Sig_Partition *b) {
     int r = a->node_label.compare(b->node_label);
     if (r != 0) {
-        if (r < 0) return true;
-        else return false;
+        if (r < 0) return false;
+        else return true;
     }
 
     if (a->degree != b->degree) {
-        if (a->degree - b->degree < 0) return true;
-        else return false;
+        if (a->degree - b->degree < 0) return false;
+        else return true;
     }
 
     r = a->nl.compare(b->nl);
     if (r != 0) {
-        if (r < 0) return true;
-        else return false;
+        if (r < 0) return false;
+        else return true;
     }
 
     if (a->part_id < b->part_id)
-        return true;
-    else
         return false;
-}
-
-bool descending(Sig_Partition *a, Sig_Partition *b) {
-    return !ascending(a, b);
+    else
+        return true;
 }
 
 /**
@@ -524,9 +517,9 @@ bool descending(Sig_Partition *a, Sig_Partition *b) {
  */
 void Sig_Partition::set_sorting_values() {
     NodeInfo *n_info = *(nodes.begin());
-    degree = n_info->node->get_edges_size();
-    node_label = n_info->node->get_label();
-    nl = n_info->nl;
+    this->degree = n_info->node->get_edges_size();
+    this->node_label = n_info->node->get_label();
+    this->nl = n_info->nl;
 }
 
 Sig_Partition::Sig_Partition(int part_id) {
@@ -535,39 +528,34 @@ Sig_Partition::Sig_Partition(int part_id) {
 
 void Sig_Partition::add_node(NodeInfo *n_info) {
     n_info->part_id = this->part_id;
-    nodes.push_back(n_info);
+    this->nodes.push_back(n_info);
 }
 
 std::vector<NodeInfo *>::const_iterator Sig_Partition::get_nodes_enum() const {
-    return nodes.begin();
+    return this->nodes.begin();
 }
 
 int Sig_Partition::get_num_nodes() {
-    return nodes.size();
+    return this->nodes.size();
 }
 
 void Sig_Partition::clear_nodes() {
-    nodes.clear();
+    this->nodes.clear();
 }
 
 void Sig_Partition::set_id(int partID) {
     this->part_id = partID;
-    for (auto nInfo : nodes) {
+    for (auto nInfo : this->nodes) {
         nInfo->part_id = this->part_id;
     }
 }
 
 int Sig_Partition::get_id() {
-    return part_id;
+    return this->part_id;
 }
 
-/**
- * get the partitioning of this partition
- * returns null if no need to partition
- * [Translated to C++]
- */
 std::map<std::string, Sig_Partition *> *Sig_Partition::get_new_parts() {
-    if (nodes.size() == 1)
+    if (this->nodes.size() == 1)
         return nullptr;
 
     auto *parts = new std::map<std::string, Sig_Partition *>();
@@ -595,19 +583,18 @@ std::map<std::string, Sig_Partition *> *Sig_Partition::get_new_parts() {
 }
 
 std::string Sig_Partition::to_string() {
-    std::string sb = "";
-    sb.append("Partition ID: " + int_to_string(part_id) + "\n");
+    std::string sb = "Partition ID: " + int_to_string(part_id) + "\n";
 
     for (auto n_info : nodes) {
-        sb.append(n_info->to_string() + "\n");
+        sb += (n_info->to_string() + "\n");
     }
 
     return sb;
 }
 
 std::vector<std::vector<NodeInfo *> *> *Sig_Partition::get_combinations() {
-    if (combinations.size() > 0)
-        return &combinations;
+    if (this->combinations.size() > 0)
+        return &(this->combinations);
 
     auto *notused = new std::vector<NodeInfo *>(nodes);
 
@@ -621,9 +608,8 @@ std::vector<std::vector<NodeInfo *> *> *Sig_Partition::get_combinations() {
     for (auto &iter: nodes) {
         MyNode *node = iter->node;
         for (std::tr1::unordered_map<int, void *>::iterator iter1 = node->get_edges_begin(); iter1 !=
-                node->get_edges_end(); iter1++) {
-            int other_node_id = ((MyEdge *) iter1->second)->get_neighbor()->get_id();
-            if (all_nodes.find(other_node_id) == all_nodes.end()) {
+                                                                                             node->get_edges_end(); iter1++) {
+            if (all_nodes.find(((MyEdge *) iter1->second)->get_neighbor()->get_id()) == all_nodes.end()) {
                 connected_within = false;
                 break;
             }
@@ -636,13 +622,12 @@ std::vector<std::vector<NodeInfo *> *> *Sig_Partition::get_combinations() {
 
     delete notused;
 
-    return &combinations;
+    return &(this->combinations);
 }
 
 void Sig_Partition::combinations_fn(std::vector<NodeInfo *> *notused, bool connected_within) {
     do {
-        auto *v1 = new std::vector<NodeInfo *>(*notused);
-        combinations.insert(combinations.end(), v1);
+        this->combinations.insert(this->combinations.end(), new std::vector<NodeInfo *>(*notused));
         //this needs a proof
         if (connected_within)
             break;
@@ -654,21 +639,21 @@ void Sig_Partition::sort_nodes() {
 }
 
 bool node_info_asc(NodeInfo *a, NodeInfo *b) {
-    int r = a->nl.compare(b->nl);
-    if (r < 0)
-        return true;
-    else if (r == 0)//this part is not needed for the algorithm, but it is needed for the STL::next_permutation function
-    {
-        if (a->node->get_id() < b->node->get_id())
-            return true;
-        else
-            return false;
-    } else
-        return false;
+    return !node_info_des(a, b);
 }
 
 bool node_info_des(NodeInfo *a, NodeInfo *b) {
-    return !node_info_asc(a, b);
+    int r = a->nl.compare(b->nl);
+    if (r < 0)
+        return false;
+    else if (r == 0)//this part is not needed for the algorithm, but it is needed for the STL::next_permutation function
+    {
+        if (a->node->get_id() < b->node->get_id())
+            return false;
+        else
+            return true;
+    } else
+        return true;
 }
 
 NodeInfo::NodeInfo(MyNode *node) {
@@ -676,20 +661,20 @@ NodeInfo::NodeInfo(MyNode *node) {
 }
 
 std::string NodeInfo::to_string() {
-    return "NodeID: " + int_to_string(node->get_id()) + "\nPartID: " + int_to_string(part_id) + "\nNeighbors List:" +
-           nl;
+    return "NodeID: " + int_to_string(this->node->get_id()) + "\nPartID: " + int_to_string(this->part_id) + "\nNeighbors List:" +
+           this->nl;
 }
 
 std::string PartID_label::to_string() {
-    return "(p" + int_to_string(part_id) + "," + label + "),";
+    return "(p" + int_to_string(this->part_id) + "," + this->label + "),";
 }
 
 /**
  * A function to copy map content into a vector
  */
 void map_to_vec(std::map<std::string, Sig_Partition *> &m, std::vector<Sig_Partition *> &v) {
-    for (auto it = m.begin(); it != m.end(); ++it) {
-        v.push_back(it->second);
+    for (auto it : m) {
+        v.push_back(it.second);
     }
 }
 

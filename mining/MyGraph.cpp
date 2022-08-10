@@ -773,6 +773,37 @@ std::string MyGraph::get_sig() {
     return sig;
 }
 
+void MyGraph::print_instance(std::ostream &os, int id, const MyGraph &g) {
+    os << "# t " << id << "\n";
+    for (auto ii : g.nodes) {
+        MyNode *node = ii.second;
+        os << "v " << node->get_id() << " " << node->get_label() << "\n";
+    }
+
+    std::tr1::unordered_set<std::string> saved_edges;
+    for (auto ii : g.nodes) {
+        MyNode *node = ii.second;
+        for (std::tr1::unordered_map<int, void *>::iterator iter1 = node->get_edges_begin(); iter1 !=
+                                                                                             node->get_edges_end(); iter1++) {
+            auto *edge = (MyEdge *) iter1->second;
+
+            std::string sig =
+                    int_to_string(node->get_id()) + "_" + edge->get_label() + "_" + int_to_string(
+                            edge->get_neighbor()->get_id());
+            if (node->get_id() < edge->get_neighbor()->get_id())
+                sig = int_to_string(edge->get_neighbor()->get_id()) + "_" + edge->get_label() +
+                      "_" +
+                      int_to_string(
+                              node->get_id());
+            if (saved_edges.find(sig) == saved_edges.end()) {
+                saved_edges.insert(sig);
+                os << "e " << node->get_id() << " " << edge->get_neighbor()->get_id() << " " << std::setprecision(10)
+                   << edge->get_label() << "\n";
+            }
+        }
+    }
+}
+
 std::ostream &operator<<(std::ostream &os, const MyGraph &g) {
     os << "# t 1\n";
     //output the nodes

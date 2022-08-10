@@ -93,6 +93,8 @@ public:
     std::tr1::unordered_map<std::string, std::set<int> *> get_nodes_by_label() {
         return nodes_by_label;
     }
+
+    void print_instance(std::ostream &os, int id, const MyGraph &g);
 };
 
 std::ostream &operator<<(std::ostream &, const MyGraph &);

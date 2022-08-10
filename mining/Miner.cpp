@@ -58,12 +58,11 @@ void Miner::generate_now_graph(System &sym, int support, int seed_node_id) {
         graph->add_edge(id1, id2, edge_label, edge_to_freq, edge_pairs);
     }
 
-    std::cout << "Master: loop starts" << std::endl;
     // traverse all edges and add frequent edges to freqEdges
     for (auto &iter: edge_to_freq) {
         if (((Pattern *) (iter.second))->get_frequency() >= support) {
             Pattern *p = (Pattern *) (iter.second);
-            std::cout << *(p->get_graph()) << std::endl;
+//            std::cout << *(p->get_graph()) << std::endl;
 
             std::string key = iter.first;
             bool flag = false;
@@ -98,7 +97,6 @@ void Miner::generate_now_graph(System &sym, int support, int seed_node_id) {
             delete (Pattern *) (iter.second);
     }
     edge_pairs.clear();
-    std::cout << "Master: loop finishes" << std::endl;
 
     std::cout << " data loaded successfully!" << std::endl;
 }
@@ -214,9 +212,9 @@ void Miner::start_mining_module(System &sym, int support, int seed_node_id) {
             }
         }
     }
-    for (auto &frequent_pattern: frequent_pattern_vec) {
-        std::cout << *(frequent_pattern->get_graph()) << std::endl;
-    }
+//    for (auto &frequent_pattern: frequent_pattern_vec) {
+//        std::cout << *(frequent_pattern->get_graph()) << std::endl;
+//    }
     long long mining_end_time = get_msec();
 //    print_frequent_module();
     long long mining_elapsed = mining_end_time - mining_start_time;
@@ -263,7 +261,6 @@ void Miner::DFS(int old_id, int new_id) {
             }
             std::cout << "------------------------------------------" << std::endl;
         }
-        //std::cout << "frequent!" << std::endl;
         if ((frequent_patterns.size() - 1) < new_candidate->get_size()) {
             frequent_patterns.insert(frequent_patterns.begin() + new_candidate->get_size(), new SigMap());
         }
@@ -326,8 +323,10 @@ void Miner::print_domains() {
     }
 }
 
+int output_id = 0;
+
 void Miner::store_frequent_instance(const std::string &path) {
-    std::cout << "store frequent subgraph instances in /instance.data" << std::endl;
+    std::cout << "store frequent subgraph instances in ./output/instance.data" << std::endl;
     std::string graph_file = path + "/instance.data";
     std::ofstream out(graph_file);
     int cnt = 0;
@@ -339,6 +338,7 @@ void Miner::store_frequent_instance(const std::string &path) {
         out << "*****frequent pattern: " << cnt << "*****" << std::endl;
         out << *(frequent_pattern_vec[cnt]->get_graph()) << std::endl;
         auto now_domain = frequent_patterns_domain[cnt][0];
+        output_id = 0;
         for (auto &id_iter: now_domain) {
             domain_dfs(id_iter, cnt, out);
             now_graph->remove_node(id_iter);
@@ -349,56 +349,122 @@ void Miner::store_frequent_instance(const std::string &path) {
     }
 }
 
+/**
+ * this function takes too much time, we adopt the new one below
+ */
+//void Miner::domain_dfs(int node_id, int graph_id, std::ofstream& out) {
+//    if (id_set.count(node_id)>0)
+//        return;
+//    int domain_id = id_map.size();
+//    now_graph->add_node(node_id, graph->get_node_with_id(node_id)->get_label());
+//    id_map[domain_id] = node_id;
+//    id_set.insert(node_id);
+//    if(id_map.size() > 1) {
+//        auto subgraph_module = frequent_pattern_vec[graph_id]->get_graph();
+//        MyNode *pNode = subgraph_module->get_node_with_id(domain_id);
+//        for (auto iter = pNode->get_edges_begin(); iter != pNode->get_edges_end(); iter++) {
+//            MyEdge *now_edge = (MyEdge *) (iter->second);
+//            int other_id = now_edge->get_neighbor()->get_id();
+//            if (other_id < domain_id) {
+//                auto g_other_node = graph->get_node_with_id(id_map[other_id]);
+//                if (!g_other_node->is_neighbor(graph->get_node_with_id(node_id)))
+//                    return;
+//                else
+//                    now_graph->add_edge(id_map[other_id], node_id, subgraph_module->get_edge_label(other_id, domain_id));
+//            }
+//        }
+//    }
+//    if (domain_id == frequent_patterns_domain[graph_id].size() - 1) {
+////        out << *(now_graph) << std::endl;
+//        now_graph->print_instance(out, output_id, now_graph);
+//        output_id++;
+//        return;
+//    }
+//    auto next_domain = frequent_patterns_domain[graph_id][domain_id + 1];
+//    for (int next_id: next_domain) {
+//        if (id_set.count(next_id) <= 0) {
+//            domain_dfs(next_id, graph_id, out);
+//            auto next_node = now_graph->get_node_with_id(next_id);
+//            int pre_nodes_cnt = now_graph->get_nodes_num();
+//            for (auto iter = next_node->get_edges_begin(); iter != next_node->get_edges_end(); iter++) {
+//                MyEdge *now_edge = (MyEdge *) (iter->second);
+//                int other_id = now_edge->get_neighbor()->get_id();
+//                now_graph->remove_edge_x(next_id, other_id);
+//            }
+//            int post_nodes_cnt = now_graph->get_nodes_num();
+//
+////            std::cout << id_map << std::endl;
+//            if (id_map.find(domain_id + 1) != id_map.end()) {
+//                id_map.erase(domain_id + 1);
+//                if (pre_nodes_cnt == post_nodes_cnt)
+//                    now_graph->remove_node(next_id);
+//                if (id_set.count(next_id) > 0)
+//                    id_set.erase(next_id);
+//            }
+//
+////            std::cout << id_map << std::endl;
+////            std::cout << id_set << std::endl;
+//        }
+//    }
+//}
+
 void Miner::domain_dfs(int node_id, int graph_id, std::ofstream& out) {
-    if (id_set.count(node_id)>0)
-        return;
     int domain_id = id_map.size();
     now_graph->add_node(node_id, graph->get_node_with_id(node_id)->get_label());
     id_map[domain_id] = node_id;
     id_set.insert(node_id);
-    if(id_map.size() > 1) {
-        auto subgraph_module = frequent_pattern_vec[graph_id]->get_graph();
-        MyNode *pNode = subgraph_module->get_node_with_id(domain_id);
-        for (auto iter = pNode->get_edges_begin(); iter != pNode->get_edges_end(); iter++) {
-            MyEdge *now_edge = (MyEdge *) (iter->second);
-            int other_id = now_edge->get_neighbor()->get_id();
-            if (other_id < domain_id) {
-                auto g_other_node = graph->get_node_with_id(id_map[other_id]);
-                if (!g_other_node->is_neighbor(graph->get_node_with_id(node_id)))
-                    return;
-                else
-                    now_graph->add_edge(id_map[other_id], node_id, subgraph_module->get_edge_label(other_id, domain_id));
-            }
+
+    auto subgraph_module = frequent_pattern_vec[graph_id]->get_graph();
+    MyNode *pNode = subgraph_module->get_node_with_id(domain_id);
+    for (auto iter = pNode->get_edges_begin(); iter != pNode->get_edges_end(); iter++) {
+        MyEdge *now_edge = (MyEdge *) (iter->second);
+        int other_id = now_edge->get_neighbor()->get_id();
+        if (other_id < domain_id) {
+            now_graph->add_edge(id_map[other_id], node_id, subgraph_module->get_edge_label(other_id, domain_id));
         }
     }
+
     if (domain_id == frequent_patterns_domain[graph_id].size() - 1) {
-        out << *(now_graph) << std::endl;
+        now_graph->print_instance(out, output_id, now_graph);
+        output_id++;
         return;
     }
+
     auto next_domain = frequent_patterns_domain[graph_id][domain_id + 1];
     for (int next_id: next_domain) {
         if (id_set.count(next_id) <= 0) {
-            domain_dfs(next_id, graph_id, out);
-            auto next_node = now_graph->get_node_with_id(next_id);
-            int pre_nodes_cnt = now_graph->get_nodes_num();
-            for (auto iter = next_node->get_edges_begin(); iter != next_node->get_edges_end(); iter++) {
-                MyEdge *now_edge = (MyEdge *) (iter->second);
-                int other_id = now_edge->get_neighbor()->get_id();
-                now_graph->remove_edge_x(next_id, other_id);
-            }
-            int post_nodes_cnt = now_graph->get_nodes_num();
+            if (id_map.size() >= 1) {
+                subgraph_module = frequent_pattern_vec[graph_id]->get_graph();
+                pNode = subgraph_module->get_node_with_id(domain_id + 1);
 
-//            std::cout << id_map << std::endl;
-            if (id_map.find(domain_id + 1) != id_map.end()) {
-                id_map.erase(domain_id + 1);
-                if (pre_nodes_cnt == post_nodes_cnt)
-                    now_graph->remove_node(next_id);
-                if (id_set.count(next_id) > 0)
-                    id_set.erase(next_id);
-            }
+                for (auto iter = pNode->get_edges_begin(); iter != pNode->get_edges_end(); iter++) {
+                    MyEdge *p_edge = (MyEdge *) (iter->second);
+                    int p_other_id = p_edge->get_neighbor()->get_id();
+                    if (p_other_id <= domain_id) {
+                        auto g_other_node = graph->get_node_with_id(id_map[p_other_id]);
+                        if (!g_other_node->is_neighbor(graph->get_node_with_id(next_id)))
+                            break;
+                        domain_dfs(next_id, graph_id, out);
 
-//            std::cout << id_map << std::endl;
-//            std::cout << id_set << std::endl;
+                        auto next_node = now_graph->get_node_with_id(next_id);
+                        int pre_nodes_cnt = now_graph->get_nodes_num();
+                        for (auto iter = next_node->get_edges_begin(); iter != next_node->get_edges_end(); iter++) {
+                            MyEdge *now_edge = (MyEdge *) (iter->second);
+                            int other_id = now_edge->get_neighbor()->get_id();
+                            now_graph->remove_edge_x(next_id, other_id);
+                        }
+                        int post_nodes_cnt = now_graph->get_nodes_num();
+
+                        if (id_map.find(domain_id + 1) != id_map.end()) {
+                            id_map.erase(domain_id + 1);
+                            if (pre_nodes_cnt == post_nodes_cnt)
+                                now_graph->remove_node(next_id);
+                            if (id_set.count(next_id) > 0)
+                                id_set.erase(next_id);
+                        }
+                    }
+                }
+            }
         }
     }
 }

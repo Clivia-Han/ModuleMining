@@ -1,6 +1,3 @@
-/**
- * This class is responsible for generating a unique graph canonical label
- */
 #pragma once
 
 #include "MyGraph.h"
@@ -36,7 +33,6 @@ private:
     std::vector<NodeInfo *> nodes;
     std::vector<std::vector<NodeInfo *> *> combinations;
 
-    //the below used for sorting, every partition must have all nodes with the same values for the below variables
     int degree;
     std::string node_label;
     std::string nl;
@@ -93,6 +89,8 @@ bool descending(Sig_Partition *a, Sig_Partition *b);
 class PartID_label {
 public:
     PartID_label() = default;
+
+    PartID_label(int _part_id, std::string _label) : part_id(_part_id), label(_label) {}
 
     ~PartID_label() = default;
 
