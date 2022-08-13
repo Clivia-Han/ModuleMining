@@ -1,5 +1,6 @@
 MSG = update
-DATA = aes_core.hierarchy.v.table
+V = aes_core.hierarchy.v
+TABLE = aes_core.hierarchy.v.table
 
 clean:
 	rm -fr build && rm -fr bin
@@ -17,10 +18,7 @@ test-run:
 	cd bin && ./test_run
 
 pre:
-	cd bin && ./pre $(DATA)
-
-pre-p:
-	cd bin && ./pre $(DATA) -p
+	cd bin && ./pre $(TABLE) $(V)
 
 run:
 	cd bin && ./main

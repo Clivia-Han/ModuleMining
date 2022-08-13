@@ -30,10 +30,10 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/../bin)
 # add_executable(run_test test/run_test.cpp)
 # target_link_libraries(run_test framework)
 
-add_executable(mining_test test/mining_test.cpp)
-target_link_libraries(mining_test mining framework)
+# add_executable(mining_test test/mining_test.cpp)
+# target_link_libraries(mining_test mining framework)
 
-add_executable(pre pre_src/pre.cpp)
+add_executable(pre pre_src/pre_v.cpp)
 target_link_libraries(pre framework)
 
 add_executable(main main.cpp)

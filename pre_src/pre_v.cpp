@@ -78,7 +78,7 @@ bool split_file(const std::string& data, const std::string& out_folder) {
     std::ofstream outfile;
     std::string line;
     std::string module_name, cell_name, cell_type, cell_port, dir, signal,
-            pre_module_name;
+        pre_module_name;
     std::ifstream infile("../data/" + data);
     if (infile.fail()) {
         std::cerr << "open data failed!\n";
@@ -114,7 +114,7 @@ bool divide_table(const std::string& out_folder) {
     }
     m_infile.close();
 #pragma omp parallel for
-    for (int item = 0; item < module_names.size(); ++item) {
+    for (int item = (int) module_names.size() - 1; item >= 0; --item) {
         auto module_name = module_names[item];
         std::ifstream infile;
         std::ofstream outfile;
@@ -147,32 +147,8 @@ bool divide_table(const std::string& out_folder) {
             while (!signal.empty() && signal.back() == ' ')
                 signal.pop_back();
             signal = std::regex_replace(signal, std::regex("\\s\\["), "[");
-            auto raw_signal = split(signal, ' ');
-            // std::vector<std::string> signals{raw_signal.begin(),
-            // raw_signal.end()};
             outfile << cell_name << ' ' << cell_type << ' ' << cell_port << ' '
-                    << dir << ' ';
-            for (auto i : range(raw_signal.size())) {
-                auto& view = raw_signal[i];
-                auto p2 = view.find_first_of(':', 0);
-                if (p2 == view.size()) {
-                    outfile << std::string(view);
-                } else {
-                    // split \xxx[X:Y] to {\xxx[Y], \xxx[Y+1], ... , \xxx[X]}
-                    auto p1 = view.find_first_of('[', 0),
-                            p3 = view.find_first_of(']', p2);
-                    int to = view.substr(p1 + 1, p2 - p1 - 1).parse();
-                    int from = view.substr(p2 + 1, p3 - p2 - 1).parse();
-                    auto pre = view.substr(0, p1);
-                    for (int j = from; j <= to; ++j) {
-                        if (j != from)
-                            outfile << ' ';
-                        outfile << std::string(pre) << '[' << std::to_string(j)
-                                << ']';
-                    }
-                }
-                outfile << " \n"[i + 1 == raw_signal.size()];
-            }
+                    << dir << ' ' << signal << '\n';
         }
         infile.close();
         outfile.close();
@@ -182,7 +158,7 @@ bool divide_table(const std::string& out_folder) {
 }
 
 // update primary input&output's signal to multi
-bool update_pipo(const std::string& out_folder) {
+bool update_pipo(const std::string verilog, const std::string& out_folder) {
     std::ifstream m_infile;
     m_infile.open(out_folder + "/.topo");
     std::vector<std::string> module_names;
@@ -191,8 +167,47 @@ bool update_pipo(const std::string& out_folder) {
         module_names.push_back(_line);
     }
     m_infile.close();
+    m_infile.open("../data/" + verilog);
+    if (m_infile.fail()) {
+        std::cerr << "open data failed!\n";
+        return false;
+    }
+    std::string _type, m_name, s_name, s_range;
+    std::map<std::string, std::map<std::string, std::pair<int, int>>> sig_range;
+    while (std::getline(m_infile, _line)) {
+        std::istringstream iss(_line);
+        iss >> _type;
+        if (_type == "module") {
+            iss >> m_name;
+            if (m_name.front() == '\\') {
+                m_name.erase(m_name.begin());
+            }
+            auto raw_name = split(m_name, '(');
+            m_name = raw_name.front();
+        } else if (_type == "input" || _type == "output") {
+            iss >> s_range;
+            if (s_range[0] == '[') {
+                iss >> s_name;
+                s_name.pop_back();
+                s_name = "\\" + s_name;
+                string_view view(s_range);
+                auto p2 = view.find_first_of(':', 0);
+                auto p1 = view.find_first_of('[', 0);
+                auto p3 = view.find_first_of(']', p2);
+                int from = view.substr(p1 + 1, p2 - p1 - 1).parse();
+                int to = view.substr(p2 + 1, p3 - p2 - 1).parse();
+                sig_range[m_name][s_name] = {from, to};
+            }
+        }
+    }
+    // for (auto &e : sig_range) {
+    //     std::cout << e.first << "233\n";
+    //     for (auto &ee : e.second) {
+    //         std::cout << ee.first << ' ' << ee.second.first << ' ' << ee.second.second << '\n';
+    //     }
+    // }
 #pragma omp parallel for
-    for (int item = 0; item < module_names.size(); ++item) {
+    for (int item = (int) module_names.size() - 1; item >= 0; --item) {
         auto module_name = module_names[item];
         std::ifstream infile;
         std::ofstream outfile;
@@ -200,62 +215,49 @@ bool update_pipo(const std::string& out_folder) {
         std::filesystem::path p2(out_folder + "/" + module_name + ".table.b");
         std::filesystem::rename(p1, p2);
         infile.open(p2);
+        outfile.open(p1);
         std::string line, cell_name, cell_type, cell_port, dir, signal;
         std::getline(infile, line);
-        std::vector<std::pair<std::string, std::vector<std::string>>> pios;
+        outfile << line << '\n';
         while (std::getline(infile, line)) {
             std::istringstream iss(line);
             iss >> cell_name >> cell_type >> cell_port >> dir;
+            outfile << cell_name << ' ' << cell_type << ' ' << cell_port << ' ' << dir << ' ';
             iss.ignore();  // ignore one space for signal
+            auto &sig_rg = sig_range[module_name];
             std::getline(iss, signal);
-            if (cell_type == "-") {
-                pios.emplace_back(signal, std::vector<std::string>());
-                continue;
-            }
             auto raw_signal = split(signal, ' ');
-            for (auto& sig_view : raw_signal) {
-                for (auto& [str, vec] : pios) {
-                    if (str == sig_view) {
-                        vec.push_back(sig_view);
-                    } else if (str.size() < sig_view.size() &&
-                               sig_view.at(str.size()) == '[' &&
-                               str == sig_view.substr(0, str.size())) {
-                        vec.push_back(sig_view);
+            for (auto i : range(raw_signal.size())) {
+                auto& view = raw_signal[i];
+                if (sig_rg.count(view)) {
+                    auto &[from, to] = sig_rg[view];
+                    for (int j = from; j >= to; --j) {
+                        if (j != from)
+                            outfile << ' ';
+                        outfile << std::string(view) << '[' << std::to_string(j)
+                                << ']';
+                    }
+                } else  {
+                    auto p2 = view.find_first_of(':', 0);
+                    if (p2 == view.size()) {
+                        outfile << std::string(view);
+                    } else {
+                        // split \xxx[X:Y] to {\xxx[X], \xxx[X-1], ... , \xxx[Y]}
+                        auto p1 = view.find_first_of('[', 0),
+                            p3 = view.find_first_of(']', p2);
+                        int from = view.substr(p1 + 1, p2 - p1 - 1).parse();
+                        int to = view.substr(p2 + 1, p3 - p2 - 1).parse();
+                        auto pre = view.substr(0, p1);
+                        for (int j = from; j >= to; --j) {
+                            if (j != from)
+                                outfile << ' ';
+                            outfile << std::string(pre) << '[' << std::to_string(j)
+                                    << ']';
+                        }
                     }
                 }
+                outfile << " \n"[i + 1 == raw_signal.size()];
             }
-        }
-        for (auto &[_, vec] : pios) {
-            unique(vec);
-            if (vec.size() == 1) continue;
-            std::sort(vec.begin(), vec.end(), [](auto &lhs, auto &rhs) {
-                string_view lv(lhs), rv(rhs);
-                auto s = lv.find_first_of('[', 0);
-                auto t1 = lv.find_first_of(']', s), t2 = rv.find_first_of(']', s);
-                return lv.substr(s + 1, t1 - s - 1).parse() < rv.substr(s + 1, t2 - s - 1).parse();
-            });
-        }
-        infile.close();
-        infile.open(p2);
-        outfile.open(p1);
-        getline(infile, line);
-        outfile << line << '\n';
-        int ptr = 0;
-        while (getline(infile, line)) {
-            std::istringstream iss(line);
-            iss >> cell_name >> cell_type;
-            if (cell_type != "-") {
-                outfile << line << '\n';
-                continue;
-            }
-            iss >> cell_port >> dir;
-            outfile << cell_name << ' ' << cell_type << ' ' << cell_port << ' '
-                    << dir;
-            for (auto i : range(pios[ptr].second.size())) {
-                outfile << ' ' << pios[ptr].second[i];
-            }
-            outfile << '\n';
-            ptr++;
         }
         std::filesystem::remove(p2);
         infile.close();
@@ -276,9 +278,9 @@ bool parse(const std::string& out_folder) {
     infile.close();
     std::vector<System> syms(module_names.size());
 #pragma omp parallel for
-    for (int i = 0; i < module_names.size(); ++i) {
-        const auto& module_name = module_names[i];
-        syms[i].init(out_folder + "/" + module_name + ".table");
+    for (int item = (int) module_names.size() - 1; item >= 0; --item) {
+        const auto& module_name = module_names[item];
+        syms[item].init(out_folder + "/" + module_name + ".table");
     }
     // replace
     for (auto& sym : syms) {
@@ -287,7 +289,7 @@ bool parse(const std::string& out_folder) {
             bool flag = false;
             for (auto node_id : sym.now_graph_.node_id_set) {
                 const auto node_type =
-                        sym.attribute_trie_.find_idx(sym.node_ref(node_id).type_);
+                    sym.attribute_trie_.find_idx(sym.node_ref(node_id).type_);
                 auto which = [&](std::string match_str) {
                     for (auto i : range(module_names.size())) {
                         if (match_str == module_names[i]) {
@@ -316,20 +318,9 @@ bool parse(const std::string& out_folder) {
                 break;
         }
     }
-//    for (auto i : range(module_names.size())) {
-//        const auto& module_name = module_names[i];
-//        std::string folder_path(out_folder + "/" + module_name);
-//        // create folder
-//        std::filesystem::path p(folder_path);
-//        if (std::filesystem::exists(p))
-//            std::filesystem::remove_all(p);
-//        std::filesystem::create_directories(p);
-//        // store data
-//        syms[i].store(folder_path);
-//    }
-
-    {
-        const auto& module_name = module_names.back();
+#pragma omp parallel for
+    for (int item = (int) module_names.size() - 1; item >= 0; --item) {
+        const auto& module_name = module_names[item];
         std::string folder_path(out_folder + "/" + module_name);
         // create folder
         std::filesystem::path p(folder_path);
@@ -337,14 +328,26 @@ bool parse(const std::string& out_folder) {
             std::filesystem::remove_all(p);
         std::filesystem::create_directories(p);
         // store data
-        syms.back().store(folder_path);
+        syms[item].store(folder_path);
     }
-
+    // {
+    //     // store final module
+    //     const auto& module_name = module_names.back();
+    //     std::string folder_path(out_folder + "/" + module_name);
+    //     // create folder
+    //     std::filesystem::path p(folder_path);
+    //     if (std::filesystem::exists(p))
+    //         std::filesystem::remove_all(p);
+    //     std::filesystem::create_directories(p);
+    //     // store data
+    //     syms.back().store(folder_path);
+    // }
     return true;
 }
 
 int main(int argc, char** argv) {
     std::string data = argc < 2 ? "aes_core.hierarchy.v.table" : argv[1];
+    std::string verilog = argc < 3 ? "aes_core.hierarchy.v" : argv[2];
     std::cout << "parallel pre-run\n";
     std::string out_folder = "../pre_data/" + data;
 
@@ -375,7 +378,7 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    if (update_pipo(out_folder)) {
+    if (update_pipo(verilog, out_folder)) {
         std::cout << "update primary input&output success\n";
     } else {
         std::cerr << "Error: update primary input&output failed!\n";
